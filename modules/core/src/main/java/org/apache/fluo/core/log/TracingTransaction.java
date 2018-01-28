@@ -20,10 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Iterators;
-import org.apache.fluo.api.client.AbstractSnapshotBase;
 import org.apache.fluo.api.client.AbstractTransactionBase;
 import org.apache.fluo.api.client.Snapshot;
-import org.apache.fluo.api.client.SnapshotBase;
 import org.apache.fluo.api.client.scanner.ScannerBuilder;
 import org.apache.fluo.api.config.FluoConfiguration;
 import org.apache.fluo.api.data.Bytes;
@@ -41,14 +39,14 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.fluo.core.util.Hex.encNonAscii;
 
-public class TracingTransaction extends AbstractTransactionBase
-    implements AsyncTransaction, Snapshot {
+public class TracingTransaction extends AbstractTransactionBase implements AsyncTransaction,
+    Snapshot {
 
   private static final Logger log = LoggerFactory.getLogger(FluoConfiguration.TRANSACTION_PREFIX);
-  private static final Logger collisionLog =
-      LoggerFactory.getLogger(FluoConfiguration.TRANSACTION_PREFIX + ".collisions");
-  private static final Logger summaryLog =
-      LoggerFactory.getLogger(FluoConfiguration.TRANSACTION_PREFIX + ".summary");
+  private static final Logger collisionLog = LoggerFactory
+      .getLogger(FluoConfiguration.TRANSACTION_PREFIX + ".collisions");
+  private static final Logger summaryLog = LoggerFactory
+      .getLogger(FluoConfiguration.TRANSACTION_PREFIX + ".summary");
 
   private final AsyncTransaction tx;
   private final long txid;
@@ -85,6 +83,7 @@ public class TracingTransaction extends AbstractTransactionBase
     return Iterators.toString(Iterators.transform(ret.entrySet().iterator(),
         e -> encNonAscii(e.getKey()) + "=" + encNonAscii(e.getValue())));
   }
+
 
   private String toStringEncNonAsciiCC(Collection<Column> columns) {
     return Iterators.toString(Iterators.transform(columns.iterator(), Hex::encNonAscii));
@@ -127,63 +126,44 @@ public class TracingTransaction extends AbstractTransactionBase
 
   }
 
-  private Bytes get(SnapshotBase snap, Bytes row, Column column, String prefix) {
-    Bytes ret = snap.get(row, column);
+  @Override
+  public Bytes get(Bytes row, Column column) {
+    Bytes ret = tx.get(row, column);
     if (log.isTraceEnabled()) {
-      log.trace("txid: {} {}get({}, {}) -> {}", txid, prefix, encNonAscii(row),
-          toStringEncNonAscii(column), encNonAscii(ret));
+      log.trace("txid: {} get({}, {}) -> {}", txid, encNonAscii(row), toStringEncNonAscii(column),
+          encNonAscii(ret));
     }
     return ret;
   }
 
-  private Map<Column, Bytes> get(SnapshotBase snap, Bytes row, Set<Column> columns, String prefix) {
-    Map<Column, Bytes> ret = snap.get(row, columns);
+  @Override
+  public Map<Column, Bytes> get(Bytes row, Set<Column> columns) {
+    Map<Column, Bytes> ret = tx.get(row, columns);
     if (log.isTraceEnabled()) {
-      log.trace("txid: {} {}get({}, {}) -> {}", txid, prefix, encNonAscii(row),
+      log.trace("txid: {} get({}, {}) -> {}", txid, encNonAscii(row),
           toStringEncNonAsciiCC(columns), toStringEncNonAsciiMCB(ret));
     }
     return ret;
   }
 
-  private Map<Bytes, Map<Column, Bytes>> get(SnapshotBase snap, Collection<Bytes> rows,
-      Set<Column> columns, String prefix) {
-    Map<Bytes, Map<Column, Bytes>> ret = snap.get(rows, columns);
+  @Override
+  public Map<Bytes, Map<Column, Bytes>> get(Collection<Bytes> rows, Set<Column> columns) {
+    Map<Bytes, Map<Column, Bytes>> ret = tx.get(rows, columns);
     if (log.isTraceEnabled()) {
-      log.trace("txid: {} {}get({}, {}) -> {}", txid, prefix, toStringEncNonAsciiCB(rows),
+      log.trace("txid: {} get({}, {}) -> {}", txid, toStringEncNonAsciiCB(rows),
           toStringEncNonAsciiCC(columns), toStringEncNonAsciiMBMCB(ret));
     }
     return ret;
   }
 
-
-  private Map<RowColumn, Bytes> get(SnapshotBase snap, Collection<RowColumn> rowColumns,
-      String prefix) {
-    Map<RowColumn, Bytes> ret = snap.get(rowColumns);
+  @Override
+  public Map<RowColumn, Bytes> get(Collection<RowColumn> rowColumns) {
+    Map<RowColumn, Bytes> ret = tx.get(rowColumns);
     if (log.isTraceEnabled()) {
-      log.trace("txid: {} {}get({}) -> {}", txid, prefix, toStringEncNonAsciiCRC(rowColumns),
+      log.trace("txid: {} get({}) -> {}", txid, toStringEncNonAsciiCRC(rowColumns),
           toStringEncNonAsciiMRCB(ret));
     }
     return ret;
-  }
-
-  @Override
-  public Bytes get(Bytes row, Column column) {
-    return get(tx, row, column, "");
-  }
-
-  @Override
-  public Map<Column, Bytes> get(Bytes row, Set<Column> columns) {
-    return get(tx, row, columns, "");
-  }
-
-  @Override
-  public Map<Bytes, Map<Column, Bytes>> get(Collection<Bytes> rows, Set<Column> columns) {
-    return get(tx, rows, columns, "");
-  }
-
-  @Override
-  public Map<RowColumn, Bytes> get(Collection<RowColumn> rowColumns) {
-    return get(tx, rowColumns, "");
   }
 
   @Override
@@ -241,8 +221,8 @@ public class TracingTransaction extends AbstractTransactionBase
       collisionLog.trace("txid: {} class: {}", txid, clazz.getName());
     }
 
-    collisionLog.trace("txid: {} collisions: {}", txid,
-        toStringEncNonAsciiMBSC(tx.getStats().getRejected()));
+    collisionLog.trace("txid: {} collisions: {}", txid, toStringEncNonAsciiMBSC(tx.getStats()
+        .getRejected()));
   }
 
   @Override
@@ -255,12 +235,11 @@ public class TracingTransaction extends AbstractTransactionBase
         className = clazz.getSimpleName();
       }
       // TODO log total # read, see fluo-426
-      summaryLog.trace(
-          "txid: {} thread : {} time: {} ({} {}) #ret: {} #set: {} #collisions: {} "
-              + "waitTime: {} committed: {} class: {}",
-          txid, Thread.currentThread().getId(), stats.getTime(), stats.getReadTime(),
-          stats.getCommitTime(), stats.getEntriesReturned(), stats.getEntriesSet(),
-          stats.getCollisions(), stats.getLockWaitTime(), committed, className);
+      summaryLog.trace("txid: {} thread : {} time: {} ({} {}) #ret: {} #set: {} #collisions: {} "
+          + "waitTime: {} committed: {} class: {}", txid, Thread.currentThread().getId(),
+          stats.getTime(), stats.getReadTime(), stats.getCommitTime(), stats.getEntriesReturned(),
+          stats.getEntriesSet(), stats.getCollisions(), stats.getLockWaitTime(), committed,
+          className);
     }
     tx.close();
   }
@@ -322,44 +301,5 @@ public class TracingTransaction extends AbstractTransactionBase
   @Override
   public int getSize() {
     return tx.getSize();
-  }
-
-  @Override
-  public SnapshotBase withReadLock() {
-    SnapshotBase rltx = tx.withReadLock();
-
-    return new AbstractSnapshotBase() {
-
-      @Override
-      public ScannerBuilder scanner() {
-        // this is an unsupported op and will throw an exception so don't bother w/ trace logging
-        return rltx.scanner();
-      }
-
-      @Override
-      public long getStartTimestamp() {
-        return rltx.getStartTimestamp();
-      }
-
-      @Override
-      public Map<RowColumn, Bytes> get(Collection<RowColumn> rowColumns) {
-        return TracingTransaction.this.get(rltx, rowColumns, "withReadLock().");
-      }
-
-      @Override
-      public Map<Bytes, Map<Column, Bytes>> get(Collection<Bytes> rows, Set<Column> columns) {
-        return TracingTransaction.this.get(rltx, rows, columns, "withReadLock().");
-      }
-
-      @Override
-      public Map<Column, Bytes> get(Bytes row, Set<Column> columns) {
-        return TracingTransaction.this.get(rltx, row, columns, "withReadLock().");
-      }
-
-      @Override
-      public Bytes get(Bytes row, Column column) {
-        return TracingTransaction.this.get(rltx, row, column, "withReadLock().");
-      }
-    };
   }
 }

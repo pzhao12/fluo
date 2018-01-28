@@ -77,8 +77,8 @@ public class NotificationProcessor implements AutoCloseable {
 
     private long size(RowColumn rowCol) {
       Column col = rowCol.getColumn();
-      return (long) rowCol.getRow().length() + col.getFamily().length()
-          + col.getQualifier().length() + col.getVisibility().length();
+      return rowCol.getRow().length() + col.getFamily().length() + col.getQualifier().length()
+          + col.getVisibility().length();
     }
 
     public synchronized boolean add(RowColumn rowCol, Future<?> task) {
@@ -124,7 +124,7 @@ public class NotificationProcessor implements AutoCloseable {
       notify();
     }
 
-    public synchronized boolean requeue(RowColumn rowCol, FutureTask<?> ft) {
+    public boolean requeue(RowColumn rowCol, FutureTask<?> ft) {
       if (!queuedWork.containsKey(rowCol)) {
         return false;
       }
@@ -194,8 +194,8 @@ public class NotificationProcessor implements AutoCloseable {
 
   }
 
-  private class FutureNotificationTask extends FutureTask<Void>
-      implements Comparable<FutureNotificationTask> {
+  private class FutureNotificationTask extends FutureTask<Void> implements
+      Comparable<FutureNotificationTask> {
 
     private final Notification notification;
 
@@ -227,8 +227,9 @@ public class NotificationProcessor implements AutoCloseable {
     public boolean addNotification(final NotificationFinder notificationFinder,
         final Notification notification) {
 
-      WorkTaskAsync workTask = new WorkTaskAsync(NotificationProcessor.this, notificationFinder,
-          env, notification, observers);
+      WorkTaskAsync workTask =
+          new WorkTaskAsync(NotificationProcessor.this, notificationFinder, env, notification,
+              observers);
       FutureTask<?> ft = new FutureNotificationTask(notification, notificationFinder, workTask);
 
       if (!tracker.add(notification.getRowColumn(), ft)) {
@@ -245,7 +246,6 @@ public class NotificationProcessor implements AutoCloseable {
       return true;
     }
 
-    @Override
     public void close() {
       tracker.finishAddingNotifications(id);
     }

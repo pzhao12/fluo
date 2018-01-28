@@ -29,7 +29,6 @@ import org.apache.fluo.core.client.FluoAdminImpl;
 /**
  * For running Fluo app on cluster
  */
-@Deprecated
 public abstract class ClusterAppRunner extends AppRunner {
 
   public ClusterAppRunner(String scriptName) {
@@ -115,19 +114,19 @@ public abstract class ClusterAppRunner extends AppRunner {
     try {
       config.validate();
     } catch (IllegalArgumentException e) {
-      System.err
-          .println("Error - Invalid fluo.properties (" + propsPath + ") due to " + e.getMessage());
+      System.err.println("Error - Invalid fluo.properties (" + propsPath + ") due to "
+          + e.getMessage());
       System.exit(-1);
     } catch (Exception e) {
-      System.err
-          .println("Error - Invalid fluo.properties (" + propsPath + ") due to " + e.getMessage());
+      System.err.println("Error - Invalid fluo.properties (" + propsPath + ") due to "
+          + e.getMessage());
       e.printStackTrace();
       System.exit(-1);
     }
 
     try (FluoAdminImpl admin = new FluoAdminImpl(config)) {
 
-      if (admin.applicationRunning()) {
+      if (admin.oracleExists()) {
         System.err.println("Error - The Fluo '" + config.getApplicationName() + "' application"
             + " is already running and must be stopped before running 'fluo init'. "
             + " Aborted initialization.");
@@ -176,8 +175,8 @@ public abstract class ClusterAppRunner extends AppRunner {
         }
       }
 
-      System.out.println(
-          "Initializing Fluo '" + config.getApplicationName() + "' application using " + propsPath);
+      System.out.println("Initializing Fluo '" + config.getApplicationName()
+          + "' application using " + propsPath);
       try {
         admin.initialize(initOpts);
       } catch (Exception e) {

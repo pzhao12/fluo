@@ -15,11 +15,8 @@
 
 package org.apache.fluo.core.client;
 
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import org.apache.fluo.api.client.FluoClient;
 import org.apache.fluo.api.client.LoaderExecutor;
 import org.apache.fluo.api.client.Snapshot;
@@ -48,21 +45,23 @@ public class FluoClientImpl implements FluoClient {
 
   public static final AutoCloseable setupReporters(Environment env, String id,
       AtomicInteger reporterCounter) {
-    return ReporterUtil.setupReporters(env,
-        FluoConfiguration.FLUO_PREFIX + "." + id + "." + reporterCounter.getAndIncrement());
+    return ReporterUtil.setupReporters(env, FluoConfiguration.FLUO_PREFIX + "." + id + "."
+        + reporterCounter.getAndIncrement());
   }
 
-  public FluoClientImpl(FluoConfiguration connConfig) {
-    Objects.requireNonNull(connConfig);
-    Preconditions.checkArgument(connConfig.hasRequiredConnectionProps(),
-        "missing required connection properties");
-    config = FluoAdminImpl.mergeZookeeperConfig(connConfig);
-    Preconditions.checkArgument(config.hasRequiredClientProps());
+  public FluoClientImpl(FluoConfiguration config) {
+    this.config = config;
+    if (!config.hasRequiredClientProps()) {
+      String msg = "Client configuration is missing required properties";
+      log.error(msg);
+      throw new IllegalArgumentException(msg);
+    }
     try {
       this.env = new Environment(config);
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
+
     reporter = setupReporters(env, "client", reporterCounter);
   }
 
@@ -119,10 +118,5 @@ public class FluoClientImpl implements FluoClient {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-  }
-
-  @VisibleForTesting
-  public FluoConfiguration getSharedConfiguration() {
-    return config;
   }
 }

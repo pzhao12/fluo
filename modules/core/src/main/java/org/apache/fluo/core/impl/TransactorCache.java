@@ -27,7 +27,6 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
 import org.apache.fluo.accumulo.util.LongUtil;
 import org.apache.fluo.accumulo.util.ZookeeperPath;
-import org.apache.fluo.api.config.FluoConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,18 +47,16 @@ public class TransactorCache implements AutoCloseable {
   private static final Logger log = LoggerFactory.getLogger(TransactorCache.class);
 
   public TransactorCache(Environment env) {
-    final FluoConfiguration conf = env.getConfiguration();
 
     timeoutCache =
-        CacheBuilder.newBuilder().maximumSize(FluoConfigurationImpl.getTransactorMaxCacheSize(conf))
-            .expireAfterAccess(
-                FluoConfigurationImpl.getTransactorCacheTimeout(conf, TimeUnit.MILLISECONDS),
-                TimeUnit.MILLISECONDS)
+        CacheBuilder.newBuilder().maximumSize(1 << 15)
+            .expireAfterAccess(TxInfoCache.CACHE_TIMEOUT_MIN, TimeUnit.MINUTES)
             .concurrencyLevel(10).build();
 
     this.env = env;
-    cache = new PathChildrenCache(env.getSharedResources().getCurator(),
-        ZookeeperPath.TRANSACTOR_NODES, true);
+    cache =
+        new PathChildrenCache(env.getSharedResources().getCurator(),
+            ZookeeperPath.TRANSACTOR_NODES, true);
     try {
       cache.start(StartMode.BUILD_INITIAL_CACHE);
       status = TcStatus.OPEN;
@@ -74,8 +71,7 @@ public class TransactorCache implements AutoCloseable {
         lockTs);
   }
 
-  public void addTimedoutTransactor(final Long transactorId, final long lockTs,
-      final Long startTime) {
+  public void addTimedoutTransactor(final Long transactorId, final long lockTs, final Long startTime) {
     try {
       AtomicLong cachedLockTs = timeoutCache.get(transactorId, new Callable<AtomicLong>() {
         @Override

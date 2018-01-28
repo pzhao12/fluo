@@ -28,11 +28,8 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.fluo.accumulo.format.FluoFormatter;
-import org.apache.fluo.accumulo.iterators.CountingIterator.Counter;
 import org.apache.fluo.accumulo.util.ColumnConstants;
-import org.apache.fluo.accumulo.util.ReadLockUtil;
 import org.apache.fluo.accumulo.values.DelLockValue;
-import org.apache.fluo.accumulo.values.DelReadLockValue;
 import org.apache.fluo.accumulo.values.LockValue;
 import org.apache.fluo.accumulo.values.WriteValue;
 import org.apache.fluo.api.data.Bytes;
@@ -40,7 +37,6 @@ import org.apache.fluo.api.data.Column;
 
 public class TestData {
   TreeMap<Key, Value> data = new TreeMap<>();
-  Counter counter = new Counter();
 
   TestData() {}
 
@@ -48,27 +44,17 @@ public class TestData {
     data.putAll(td.data);
   }
 
-  TestData(SortedKeyValueIterator<Key, Value> iter, Range range, boolean reseek) {
+  TestData(SortedKeyValueIterator<Key, Value> iter, Range range) {
     try {
       iter.seek(range, new HashSet<ByteSequence>(), false);
 
       while (iter.hasTop()) {
         data.put(iter.getTopKey(), iter.getTopValue());
-        if (reseek) {
-          iter.seek(
-              new Range(iter.getTopKey(), false, range.getEndKey(), range.isEndKeyInclusive()),
-              new HashSet<ByteSequence>(), false);
-        } else {
-          iter.next();
-        }
+        iter.next();
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  TestData(SortedKeyValueIterator<Key, Value> iter, Range range) {
-    this(iter, range, false);
   }
 
   TestData(SortedKeyValueIterator<Key, Value> iter) {
@@ -83,7 +69,7 @@ public class TestData {
     String cq = fields[2];
     String ct;
     long ts;
-    byte[] val = new byte[0];
+    byte[] val = new byte[0];;
 
     if (cf.equals("ntfy")) {
       ts = Long.parseLong(fields[3]) << 1;
@@ -114,8 +100,9 @@ public class TestData {
       case "LOCK":
         ts |= ColumnConstants.LOCK_PREFIX;
         String rc[] = value.split("\\s+");
-        val = LockValue.encode(Bytes.of(rc[0]), new Column(rc[1], rc[2]), value.contains("WRITE"),
-            value.contains("DELETE"), value.contains("TRIGGER"), 42l);
+        val =
+            LockValue.encode(Bytes.of(rc[0]), new Column(rc[1], rc[2]), value.contains("WRITE"),
+                value.contains("DELETE"), value.contains("TRIGGER"), 42l);
         break;
       case "DATA":
         ts |= ColumnConstants.DATA_PREFIX;
@@ -128,21 +115,6 @@ public class TestData {
         } else {
           long commitTs = Long.parseLong(value.split("\\s+")[0]);
           val = DelLockValue.encodeCommit(commitTs, value.contains("PRIMARY"));
-        }
-        break;
-      case "RLOCK":
-        ts = ReadLockUtil.encodeTs(ts, false);
-        ts |= ColumnConstants.RLOCK_PREFIX;
-        break;
-      case "DEL_RLOCK":
-        ts = ReadLockUtil.encodeTs(ts, true);
-        ts |= ColumnConstants.RLOCK_PREFIX;
-
-        if (value.contains("ROLLBACK") || value.contains("ABORT")) {
-          val = DelReadLockValue.encodeRollback();
-        } else {
-          long commitTs = Long.parseLong(value.split("\\s+")[0]);
-          val = DelReadLockValue.encodeCommit(commitTs);
         }
         break;
       case "ntfy":
@@ -191,9 +163,5 @@ public class TestData {
   @Override
   public int hashCode() {
     return Objects.hashCode(data);
-  }
-
-  public SortedKeyValueIterator<Key, Value> getIterator() {
-    return new CountingIterator(counter, data);
   }
 }

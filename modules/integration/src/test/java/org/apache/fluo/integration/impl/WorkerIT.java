@@ -4,9 +4,9 @@
  * copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -21,6 +21,7 @@ import org.apache.fluo.api.client.Transaction;
 import org.apache.fluo.api.client.TransactionBase;
 import org.apache.fluo.api.data.Column;
 import org.apache.fluo.api.data.RowColumn;
+import org.apache.fluo.api.data.Span;
 import org.apache.fluo.api.observer.ObserverProvider;
 import org.apache.fluo.api.observer.StringObserver;
 import org.apache.fluo.core.impl.Environment;
@@ -32,9 +33,7 @@ import org.apache.fluo.integration.ITBaseMini;
 import org.apache.fluo.integration.TestTransaction;
 import org.apache.fluo.mini.MiniFluoImpl;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 
 import static org.apache.fluo.api.observer.Observer.NotificationType.STRONG;
 
@@ -43,9 +42,7 @@ import static org.apache.fluo.api.observer.Observer.NotificationType.STRONG;
  * index of node degree.
  */
 public class WorkerIT extends ITBaseMini {
-  @Rule
-  public Timeout globalTimeout = Timeout.seconds(getTestTimeout() * 2);
-  // timeout needs to be > 60secs for testMultipleFinders()
+
   private static final Column LAST_UPDATE = new Column("attr", "lastupdate");
   private static final Column DEGREE = new Column("attr", "degree");
 
@@ -59,7 +56,8 @@ public class WorkerIT extends ITBaseMini {
       String degree = tx.gets(row, DEGREE);
 
       // calculate new degree
-      String degree2 = "" + Iterables.size(tx.scanner().over(row, new Column("link")).build());
+      String degree2 =
+          "" + Iterables.size(tx.scanner().over(Span.exact(row, new Column("link"))).build());
 
       if (degree == null || !degree.equals(degree2)) {
         tx.set(row, DEGREE, degree2);
@@ -153,8 +151,8 @@ public class WorkerIT extends ITBaseMini {
       Assert.fail();
 
     } catch (IllegalArgumentException ise) {
-      Assert.assertTrue(ise.getMessage()
-          .contains("Column attr2 lastupdate  not previously configured for strong notifications"));
+      Assert.assertTrue(ise.getMessage().contains(
+          "Column attr2 lastupdate  not previously configured for strong notifications"));
     } finally {
       observedColumn = LAST_UPDATE;
     }

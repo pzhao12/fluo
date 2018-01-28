@@ -24,20 +24,17 @@ import org.apache.fluo.api.exceptions.AlreadySetException;
  * to make implementing TransactionBase easier.
  */
 
-public abstract class AbstractTransactionBase extends AbstractSnapshotBase
-    implements TransactionBase {
+public abstract class AbstractTransactionBase extends AbstractSnapshotBase implements
+    TransactionBase {
 
-  @Override
   public void delete(CharSequence row, Column col) {
     delete(s2bConv(row), col);
   }
 
-  @Override
   public void set(CharSequence row, Column col, CharSequence value) throws AlreadySetException {
     set(s2bConv(row), col, Bytes.of(value));
   }
 
-  @Override
   public void setWeakNotification(CharSequence row, Column col) {
     setWeakNotification(s2bConv(row), col);
   }

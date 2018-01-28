@@ -88,8 +88,8 @@ public class ObserverStoreV2 implements ObserverStore {
           + "found.  Check for class name misspellings or failure to include "
           + "the observer provider jar.", e1);
     } catch (InstantiationException | IllegalAccessException e2) {
-      throw new FluoException(
-          "ObserverProvider class '" + obsProviderClass + "' could not be created.", e2);
+      throw new FluoException("ObserverProvider class '" + obsProviderClass
+          + "' could not be created.", e2);
     }
     return observerProvider;
   }
@@ -105,8 +105,8 @@ public class ObserverStoreV2 implements ObserverStore {
     String json = new String(data, UTF_8);
     JsonObservers jco = new Gson().fromJson(json, JsonObservers.class);
 
-    ImmutableSet.Builder<Column> weakColumnsBuilder = new ImmutableSet.Builder<>();
-    ImmutableSet.Builder<Column> strongColumnsBuilder = new ImmutableSet.Builder<>();
+    ImmutableSet.Builder<Column> weakColumnsBuilder = new ImmutableSet.Builder<Column>();
+    ImmutableSet.Builder<Column> strongColumnsBuilder = new ImmutableSet.Builder<Column>();
 
     for (Entry<Column, NotificationType> entry : jco.getObservedColumns().entrySet()) {
       switch (entry.getValue()) {

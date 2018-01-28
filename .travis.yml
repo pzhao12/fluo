@@ -1,27 +1,45 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more contributor license
-# agreements. See the NOTICE file distributed with this work for additional information regarding
-# copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance with the License. You may obtain a
-# copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software distributed under the License
-# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
-# or implied. See the License for the specific language governing permissions and limitations under
-# the License.
-language: java
-jdk:
-  - openjdk8
-script: mvn clean verify javadoc:jar -Daccumulo.version=1.8.1 -Dthrift.version=0.9.3
-notifications:
-  irc:
-    channels:
-      - "chat.freenode.net#fluo"
-    on_success: always
-    on_failure: always
-    use_notice: true
-    skip_join: true
+after_success:
+- echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.SONATYPE_USER}</username><password>\${env.SONATYPE_PASS}</password></server></servers></settings>"
+  > ~/deploy-settings.xml
+- if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_BRANCH" = "master" ]; then mvn
+  deploy -DskipTests -DskipFormat -Dcheckstyle.skip=true -Dfindbugs.skip=true --settings
+  ~/deploy-settings.xml; else echo 'Skipping deploy.'; fi
+before_cache:
+- rm -rf $HOME/CACHE; find $TRAVIS_BUILD_DIR -name .ekstazi | while read line; do
+  du -sh $line;         DIR=$(dirname $HOME/CACHE$line); mkdir -p $DIR; cp -r $line
+  $DIR; done
+- echo CACHESIZE $(du -sk $HOME/CACHE)
+before_install:
+- if [ "$TRAVIS_OS_NAME" == "osx" ];        then sed -i '' 's/<gib.enabled>true/<gib.enabled>false/'
+  $TRAVIS_BUILD_DIR/pom.xml;        else sed -i 's/<gib.enabled>true/<gib.enabled>false/'
+  $TRAVIS_BUILD_DIR/pom.xml;        fi
+- find $HOME/CACHE -name .ekstazi | while read line; do du -sh $line;         DIR=$(dirname
+  ${line#$HOME/CACHE}); if [[ -d ${DIR#.ekstazi/} ]]; then cp -r $line $DIR; fi; done
+before_script:
+- find $TRAVIS_BUILD_DIR -name .ekstazi | while read line; do rm -rf $line; done
+- find $HOME/CACHE -name .ekstazi | while read line; do du -sh $line;         DIR=$(dirname
+  ${line#$HOME/CACHE}); if [[ -d ${DIR#.ekstazi/} ]]; then cp -r $line $DIR; fi; done
+- if [ "$TRAVIS_OS_NAME" == "osx" ];    then sed -i '' 's/<gib.enabled>false/<gib.enabled>true/'
+  $TRAVIS_BUILD_DIR/pom.xml;    else sed -i 's/<gib.enabled>false/<gib.enabled>true/'
+  $TRAVIS_BUILD_DIR/pom.xml;    fi
 cache:
   directories:
-    - $HOME/.m2
+  - $HOME/.m2
+  - $HOME/CACHE
+env:
+  global:
+  - secure: HxekWtv02foIqO3e+i3SZ1vRWA9OzkuEGB5zMOmS9lcsg6w6aRkDS1y2gbSxS2n0kqPMCigGp6OcSDAptyeY4ztjVwvrWiKIdjK2Jd9dJ7INAHAhvf0xGcPNKkEWtTGWExrzstl1nXPFBDeEtjtg9+29PiiZW6JpxtUrSH5JcY0=
+  - secure: Hg7Sx0IBHgQZViVM0zrutDYZiSLtvvnZRLNrk02mNsWGnU7geMGZsSQzGCJtBoLqptlJ9E3CuZggWBH5XgYPLNk3jUiGN1SENFC60EXGHLNDHhYCO6ietpEE7gMLlK6UQAFGHRHHJrsqpqeSRFp49uK3HdwOwSAJR944H8z7/t0=
+jdk:
+- oraclejdk8
+language: java
+script:
+- touch NOW
+- echo GIBSTUDYSTART $(date)
+- mvn verify javadoc:jar
+- echo GIBSTUDYEND $(date)
+- cd $TRAVIS_BUILD_DIR
+- if [ "$TRAVIS_OS_NAME" == "osx" ];        then echo TESTNUM $(find . -name TEST-*.xml
+  -newer NOW | wc -l);        else echo TESTNUM $(find -name TEST-*.xml -newer NOW
+  | wc -l);        fi
+sudo: false

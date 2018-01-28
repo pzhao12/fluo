@@ -34,7 +34,7 @@ import org.apache.fluo.accumulo.values.WriteValue;
 public class RollbackCheckIterator implements SortedKeyValueIterator<Key, Value> {
   private static final String TIMESTAMP_OPT = "timestampOpt";
 
-  private TimestampSkippingIterator source;
+  private SortedKeyValueIterator<Key, Value> source;
   private long lockTime;
 
   boolean hasTop = false;
@@ -50,7 +50,7 @@ public class RollbackCheckIterator implements SortedKeyValueIterator<Key, Value>
   @Override
   public void init(SortedKeyValueIterator<Key, Value> source, Map<String, String> options,
       IteratorEnvironment env) throws IOException {
-    this.source = new TimestampSkippingIterator(source);
+    this.source = source;
     this.lockTime = Long.parseLong(options.get(TIMESTAMP_OPT));
   }
 
@@ -95,8 +95,7 @@ public class RollbackCheckIterator implements SortedKeyValueIterator<Key, Value>
       long ts = source.getTopKey().getTimestamp() & ColumnConstants.TIMESTAMP_MASK;
 
       if (colType == ColumnConstants.TX_DONE_PREFIX) {
-        source.skipToPrefix(curCol, ColumnConstants.WRITE_PREFIX);
-        continue;
+        // do nothing if TX_DONE
       } else if (colType == ColumnConstants.WRITE_PREFIX) {
         long timePtr = WriteValue.getTimestamp(source.getTopValue().get());
 
@@ -108,12 +107,6 @@ public class RollbackCheckIterator implements SortedKeyValueIterator<Key, Value>
           hasTop = true;
           return;
         }
-
-        if (lockTime > timePtr) {
-          source.skipToPrefix(curCol, ColumnConstants.DEL_LOCK_PREFIX);
-          continue;
-        }
-
       } else if (colType == ColumnConstants.DEL_LOCK_PREFIX) {
         if (ts > invalidationTime) {
           invalidationTime = ts;
@@ -124,14 +117,6 @@ public class RollbackCheckIterator implements SortedKeyValueIterator<Key, Value>
           return;
         }
 
-        if (lockTime > ts) {
-          source.skipToPrefix(curCol, ColumnConstants.LOCK_PREFIX);
-          continue;
-        }
-
-      } else if (colType == ColumnConstants.RLOCK_PREFIX) {
-        source.skipToPrefix(curCol, ColumnConstants.LOCK_PREFIX);
-        continue;
       } else if (colType == ColumnConstants.LOCK_PREFIX) {
         if (ts > invalidationTime) {
           // nothing supersedes this lock, therefore the column is locked

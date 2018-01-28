@@ -25,15 +25,11 @@ import org.apache.fluo.core.impl.TransactorNode;
 import org.apache.fluo.integration.ITBaseMini;
 import org.apache.fluo.integration.TestTransaction;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 
 import static org.apache.fluo.api.observer.Observer.NotificationType.STRONG;
 
 public class StrongNotificationIT extends ITBaseMini {
-  @Rule
-  public Timeout globalTimeout = Timeout.seconds(getTestTimeout());
 
   private static final Column OC = new Column("f", "q");
   private static final Column RC = new Column("f", "r");
@@ -56,8 +52,7 @@ public class StrongNotificationIT extends ITBaseMini {
   @Test
   public void testRollforward() throws Exception {
     // test for bug #642
-    try (Environment env = new Environment(config);
-        TransactorNode tnode = new TransactorNode(env)) {
+    try (Environment env = new Environment(config); TransactorNode tnode = new TransactorNode(env)) {
       TestTransaction tx = new TestTransaction(env, tnode);
 
       // set three columns that should each trigger observers
@@ -68,8 +63,8 @@ public class StrongNotificationIT extends ITBaseMini {
       // partially commit transaction
       CommitData cd = tx.createCommitData();
       Assert.assertTrue(tx.preCommit(cd));
-      Assert.assertTrue(
-          tx.commitPrimaryColumn(cd, env.getSharedResources().getOracleClient().getStamp()));
+      Assert.assertTrue(tx.commitPrimaryColumn(cd, env.getSharedResources().getOracleClient()
+          .getStamp()));
       tx.close();
     }
 

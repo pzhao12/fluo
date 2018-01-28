@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,10 +51,9 @@ public class ParallelSnapshotScanner {
   private List<Range> rangesToScan = new ArrayList<>();
   private Function<ByteSequence, Bytes> rowConverter;
   private Function<Key, Column> columnConverter;
-  private Map<Bytes, Set<Column>> readLocksSeen;
 
   ParallelSnapshotScanner(Collection<Bytes> rows, Set<Column> columns, Environment env,
-      long startTs, TxStats stats, Map<Bytes, Set<Column>> readLocksSeen) {
+      long startTs, TxStats stats) {
     this.rows = rows;
     this.columns = columns;
     this.env = env;
@@ -63,11 +61,9 @@ public class ParallelSnapshotScanner {
     this.stats = stats;
     this.rowConverter = new CachedBytesConverter(rows);
     this.columnConverter = new CachedColumnConverter(columns);
-    this.readLocksSeen = readLocksSeen;
   }
 
-  ParallelSnapshotScanner(Collection<RowColumn> cells, Environment env, long startTs, TxStats stats,
-      Map<Bytes, Set<Column>> readLocksSeen) {
+  ParallelSnapshotScanner(Collection<RowColumn> cells, Environment env, long startTs, TxStats stats) {
     for (RowColumn rc : cells) {
       byte[] r = rc.getRow().toArray();
       byte[] cf = rc.getColumn().getFamily().toArray();
@@ -86,7 +82,6 @@ public class ParallelSnapshotScanner {
     this.stats = stats;
     this.rowConverter = ByteUtil::toBytes;
     this.columnConverter = ColumnUtil::convert;
-    this.readLocksSeen = readLocksSeen;
   }
 
   private BatchScanner setupBatchScanner() {
@@ -105,7 +100,7 @@ public class ParallelSnapshotScanner {
 
     if (rangesToScan.size() > 0) {
       scanner.setRanges(rangesToScan);
-      SnapshotScanner.setupScanner(scanner, Collections.<Column>emptySet(), startTs, true);
+      SnapshotScanner.setupScanner(scanner, Collections.<Column>emptySet(), startTs);
     } else if (rows != null) {
       List<Range> ranges = new ArrayList<>(rows.size());
 
@@ -115,7 +110,7 @@ public class ParallelSnapshotScanner {
 
       scanner.setRanges(ranges);
 
-      SnapshotScanner.setupScanner(scanner, columns, startTs, true);
+      SnapshotScanner.setupScanner(scanner, columns, startTs);
     } else {
       return null;
     }
@@ -180,9 +175,13 @@ public class ParallelSnapshotScanner {
         if (colType == ColumnConstants.LOCK_PREFIX) {
           locks.add(entry);
         } else if (colType == ColumnConstants.DATA_PREFIX) {
-          ret.computeIfAbsent(row, k -> new HashMap<>()).put(col, Bytes.of(entry.getValue().get()));
-        } else if (colType == ColumnConstants.RLOCK_PREFIX) {
-          readLocksSeen.computeIfAbsent(row, k -> new HashSet<>()).add(col);
+          Map<Column, Bytes> cols = ret.get(row);
+          if (cols == null) {
+            cols = new HashMap<>();
+            ret.put(row, cols);
+          }
+
+          cols.put(col, Bytes.of(entry.getValue().get()));
         } else {
           throw new IllegalArgumentException("Unexpected column type " + colType);
         }
@@ -191,4 +190,5 @@ public class ParallelSnapshotScanner {
       bs.close();
     }
   }
+
 }

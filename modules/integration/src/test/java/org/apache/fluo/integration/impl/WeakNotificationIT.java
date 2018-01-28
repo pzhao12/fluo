@@ -21,6 +21,7 @@ import org.apache.fluo.api.client.scanner.CellScanner;
 import org.apache.fluo.api.data.Bytes;
 import org.apache.fluo.api.data.Column;
 import org.apache.fluo.api.data.RowColumnValue;
+import org.apache.fluo.api.data.Span;
 import org.apache.fluo.api.observer.Observer;
 import org.apache.fluo.api.observer.ObserverProvider;
 import org.apache.fluo.core.impl.Environment;
@@ -30,15 +31,11 @@ import org.apache.fluo.integration.ITBaseMini;
 import org.apache.fluo.integration.TestTransaction;
 import org.apache.fluo.integration.TestUtil;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 
 import static org.apache.fluo.api.observer.Observer.NotificationType.WEAK;
 
 public class WeakNotificationIT extends ITBaseMini {
-  @Rule
-  public Timeout globalTimeout = Timeout.seconds(getTestTimeout());
 
   private static final Column STAT_COUNT = new Column("stat", "count");
   private static final Column STAT_CHECK = new Column("stat", "check");
@@ -47,7 +44,8 @@ public class WeakNotificationIT extends ITBaseMini {
     @Override
     public void process(TransactionBase tx, Bytes row, Column col) throws Exception {
 
-      CellScanner cellScanner = tx.scanner().over(row, new Column(Bytes.of("stats"))).build();
+      CellScanner cellScanner =
+          tx.scanner().over(Span.exact(row, new Column(Bytes.of("stats")))).build();
 
       int sum = 0;
 
@@ -128,7 +126,7 @@ public class WeakNotificationIT extends ITBaseMini {
     env.close();
   }
 
-
+  @Test(timeout = 30000)
   public void testNOOP() throws Exception {
     // if an observer makes not updates in a transaction, it should still delete the weak
     // notification

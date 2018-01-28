@@ -18,7 +18,7 @@ package org.apache.fluo.core.oracle;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,6 +27,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
@@ -68,14 +70,19 @@ public class OracleClient implements AutoCloseable {
 
   private Participant currentLeader;
 
-  private static final class TimeRequest {
+  private static final class TimeRequest implements Callable<Stamp> {
     CountDownLatch cdl = new CountDownLatch(1);
     AtomicReference<Stamp> stampRef = new AtomicReference<>();
-    CompletableFuture<Stamp> cf = null;
+    ListenableFutureTask<Stamp> lf = null;
+
+    @Override
+    public Stamp call() throws Exception {
+      return stampRef.get();
+    }
   }
 
-  private class TimestampRetriever extends LeaderSelectorListenerAdapter
-      implements Runnable, PathChildrenCacheListener {
+  private class TimestampRetriever extends LeaderSelectorListenerAdapter implements Runnable,
+      PathChildrenCacheListener {
 
     private LeaderSelector leaderSelector;
     private CuratorFramework curatorFramework;
@@ -204,12 +211,11 @@ public class OracleClient implements AutoCloseable {
 
           for (int i = 0; i < request.size(); i++) {
             TimeRequest tr = request.get(i);
-            Stamp stampRes = new Stamp(txStampsStart + i, gcStamp);
-            tr.stampRef.set(stampRes);
-            if (tr.cf == null) {
+            tr.stampRef.set(new Stamp(txStampsStart + i, gcStamp));
+            if (tr.lf == null) {
               tr.cdl.countDown();
             } else {
-              tr.cf.complete(stampRes);
+              tr.lf.run();
             }
           }
         } catch (InterruptedException e) {
@@ -224,8 +230,8 @@ public class OracleClient implements AutoCloseable {
       }
     }
 
-    private synchronized void connect()
-        throws IOException, KeeperException, InterruptedException, TTransportException {
+    private synchronized void connect() throws IOException, KeeperException, InterruptedException,
+        TTransportException {
 
       getLeader();
       while (true) {
@@ -254,8 +260,8 @@ public class OracleClient implements AutoCloseable {
     /**
      * Atomically closes current connection and connects to the current leader
      */
-    private synchronized void reconnect()
-        throws InterruptedException, TTransportException, KeeperException, IOException {
+    private synchronized void reconnect() throws InterruptedException, TTransportException,
+        KeeperException, IOException {
       if (transport.isOpen()) {
         transport.close();
       }
@@ -338,10 +344,12 @@ public class OracleClient implements AutoCloseable {
 
   public OracleClient(Environment env) {
     this.env = env;
-    responseTimer = MetricsUtil.getTimer(env.getConfiguration(),
-        env.getSharedResources().getMetricRegistry(), env.getMetricNames().getOracleResponseTime());
-    stampsHistogram = MetricsUtil.getHistogram(env.getConfiguration(),
-        env.getSharedResources().getMetricRegistry(), env.getMetricNames().getOracleClientStamps());
+    responseTimer =
+        MetricsUtil.getTimer(env.getConfiguration(), env.getSharedResources().getMetricRegistry(),
+            env.getMetricNames().getOracleResponseTime());
+    stampsHistogram =
+        MetricsUtil.getHistogram(env.getConfiguration(), env.getSharedResources()
+            .getMetricRegistry(), env.getMetricNames().getOracleClientStamps());
     timestampRetriever = new TimestampRetriever();
     thread = new Thread(timestampRetriever);
     thread.setDaemon(true);
@@ -357,7 +365,7 @@ public class OracleClient implements AutoCloseable {
     TimeRequest tr = new TimeRequest();
     try {
       queue.put(tr);
-      int timeout = env.getConfiguration().getConnectionRetryTimeout();
+      int timeout = env.getConfiguration().getClientRetryTimeout();
       if (timeout < 0) {
         long waitPeriod = 1;
         long waitTotal = 0;
@@ -368,7 +376,7 @@ public class OracleClient implements AutoCloseable {
             waitPeriod *= 2;
           }
           log.warn(
-              "Waiting for timestamp from Oracle. Is it running? Client has waited a total of {}s and will retry in {}s",
+              "Waiting for timestamp from Oracle. Is it running? waitTotal={}s waitPeriod={}s",
               waitTotal, waitPeriod);
         }
       } else if (!tr.cdl.await(timeout, TimeUnit.MILLISECONDS)) {
@@ -381,18 +389,18 @@ public class OracleClient implements AutoCloseable {
     return tr.stampRef.get();
   }
 
-  public CompletableFuture<Stamp> getStampAsync() {
+  public ListenableFuture<Stamp> getStampAsync() {
     checkClosed();
 
     TimeRequest tr = new TimeRequest();
-    CompletableFuture<Stamp> cf = new CompletableFuture<>();
-    tr.cf = cf;
+    ListenableFutureTask<Stamp> lf = ListenableFutureTask.create(tr);
+    tr.lf = lf;
     try {
       queue.put(tr);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
-    return cf;
+    return lf;
   }
 
   /**

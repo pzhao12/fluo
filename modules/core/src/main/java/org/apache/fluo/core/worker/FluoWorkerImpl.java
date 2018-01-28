@@ -23,7 +23,6 @@ import org.apache.curator.framework.recipes.cache.NodeCache;
 import org.apache.fluo.api.config.FluoConfiguration;
 import org.apache.fluo.api.exceptions.FluoException;
 import org.apache.fluo.api.service.FluoWorker;
-import org.apache.fluo.core.client.FluoAdminImpl;
 import org.apache.fluo.core.impl.Environment;
 import org.apache.fluo.core.metrics.ReporterUtil;
 import org.apache.fluo.core.util.CuratorUtil;
@@ -42,11 +41,10 @@ public class FluoWorkerImpl implements FluoWorker {
   private NotificationFinder notificationFinder;
   private NodeCache appIdCache;
 
-  public FluoWorkerImpl(FluoConfiguration connConfig) {
-    Objects.requireNonNull(connConfig);
-    Preconditions.checkArgument(connConfig.hasRequiredConnectionProps());
-    config = FluoAdminImpl.mergeZookeeperConfig(connConfig);
+  public FluoWorkerImpl(FluoConfiguration config) {
+    Objects.requireNonNull(config);
     Preconditions.checkArgument(config.hasRequiredWorkerProps());
+    this.config = config;
   }
 
   @Override

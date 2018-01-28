@@ -4,9 +4,9 @@
  * copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -48,158 +47,39 @@ public class FluoConfiguration extends SimpleConfiguration {
 
   // Client properties
   private static final String CLIENT_PREFIX = FLUO_PREFIX + ".client";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.connection.application.name
-   */
-  @Deprecated
   public static final String CLIENT_APPLICATION_NAME_PROP = CLIENT_PREFIX + ".application.name";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.password
-   */
-  @Deprecated
   public static final String CLIENT_ACCUMULO_PASSWORD_PROP = CLIENT_PREFIX + ".accumulo.password";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.user
-   */
-  @Deprecated
   public static final String CLIENT_ACCUMULO_USER_PROP = CLIENT_PREFIX + ".accumulo.user";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.instance
-   */
-  @Deprecated
   public static final String CLIENT_ACCUMULO_INSTANCE_PROP = CLIENT_PREFIX + ".accumulo.instance";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.zookeepers
-   */
-  @Deprecated
-  public static final String CLIENT_ACCUMULO_ZOOKEEPERS_PROP =
-      CLIENT_PREFIX + ".accumulo.zookeepers";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.connection.zookeeper.timeout
-   */
-  @Deprecated
+  public static final String CLIENT_ACCUMULO_ZOOKEEPERS_PROP = CLIENT_PREFIX
+      + ".accumulo.zookeepers";
   public static final String CLIENT_ZOOKEEPER_TIMEOUT_PROP = CLIENT_PREFIX + ".zookeeper.timeout";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.connection.zookeepers
-   */
-  @Deprecated
   public static final String CLIENT_ZOOKEEPER_CONNECT_PROP = CLIENT_PREFIX + ".zookeeper.connect";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.connection.retry.timeout.ms
-   */
-  @Deprecated
   public static final String CLIENT_RETRY_TIMEOUT_MS_PROP = CLIENT_PREFIX + ".retry.timeout.ms";
-  @Deprecated
   public static final int CLIENT_ZOOKEEPER_TIMEOUT_DEFAULT = 30000;
-  @Deprecated
   public static final String CLIENT_ACCUMULO_ZOOKEEPERS_DEFAULT = "localhost";
-  @Deprecated
   public static final String CLIENT_ZOOKEEPER_CONNECT_DEFAULT = "localhost/fluo";
-  @Deprecated
   public static final int CLIENT_RETRY_TIMEOUT_MS_DEFAULT = -1;
 
-  // Connection properties
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_PREFIX = FLUO_PREFIX + ".connection";
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_APPLICATION_NAME_PROP =
-      CONNECTION_PREFIX + ".application.name";
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_ZOOKEEPER_TIMEOUT_PROP =
-      CONNECTION_PREFIX + ".zookeeper.timeout";
-
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_ZOOKEEPER_SECRET = CONNECTION_PREFIX + ".zookeeper.secret";
-
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_ZOOKEEPERS_PROP = CONNECTION_PREFIX + ".zookeepers";
-
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_RETRY_TIMEOUT_MS_PROP =
-      CONNECTION_PREFIX + ".retry.timeout.ms";
-  public static final int CONNECTION_ZOOKEEPER_TIMEOUT_DEFAULT = 30000;
-  public static final String CONNECTION_ZOOKEEPERS_DEFAULT = "localhost/fluo";
-  public static final int CONNECTION_RETRY_TIMEOUT_MS_DEFAULT = -1;
-
-  // Accumulo properties
-  private static final String ACCUMULO_PREFIX = FLUO_PREFIX + ".accumulo";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_INSTANCE_PROP = ACCUMULO_PREFIX + ".instance";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_TABLE_PROP = ACCUMULO_PREFIX + ".table";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_PASSWORD_PROP = ACCUMULO_PREFIX + ".password";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_USER_PROP = ACCUMULO_PREFIX + ".user";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_ZOOKEEPERS_PROP = ACCUMULO_PREFIX + ".zookeepers";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_JARS_PROP = ACCUMULO_PREFIX + ".jars";
-  // Accumulo defaults
-  public static final String ACCUMULO_ZOOKEEPERS_DEFAULT = "localhost";
-  public static final String ACCUMULO_JARS_DEFAULT = "";
-
-  // DFS properties
-  private static final String DFS_PREFIX = FLUO_PREFIX + ".dfs";
-  /**
-   * @since 1.2.0
-   */
-  public static final String DFS_ROOT_PROP = DFS_PREFIX + ".root";
-  // DFS defaults
-  public static final String DFS_ROOT_DEFAULT = "";
-
-  // Administration properties
+  // Administration
   private static final String ADMIN_PREFIX = FLUO_PREFIX + ".admin";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.table
-   */
-  @Deprecated
   public static final String ADMIN_ACCUMULO_TABLE_PROP = ADMIN_PREFIX + ".accumulo.table";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.observer.init.dir and fluo.observer.jars.url
-   */
-  @Deprecated
   public static final String ADMIN_ACCUMULO_CLASSPATH_PROP = ADMIN_PREFIX + ".accumulo.classpath";
-  @Deprecated
   public static final String ADMIN_ACCUMULO_CLASSPATH_DEFAULT = "";
 
-  // Worker properties
+  // Worker
   private static final String WORKER_PREFIX = FLUO_PREFIX + ".worker";
   public static final String WORKER_NUM_THREADS_PROP = WORKER_PREFIX + ".num.threads";
   public static final int WORKER_NUM_THREADS_DEFAULT = 10;
 
-  // Loader properties
+  // Loader
   private static final String LOADER_PREFIX = FLUO_PREFIX + ".loader";
   public static final String LOADER_NUM_THREADS_PROP = LOADER_PREFIX + ".num.threads";
   public static final String LOADER_QUEUE_SIZE_PROP = LOADER_PREFIX + ".queue.size";
   public static final int LOADER_NUM_THREADS_DEFAULT = 10;
   public static final int LOADER_QUEUE_SIZE_DEFAULT = 10;
 
-  // MiniFluo properties
+  // MiniFluo
   private static final String MINI_PREFIX = FLUO_PREFIX + ".mini";
   public static final String MINI_START_ACCUMULO_PROP = MINI_PREFIX + ".start.accumulo";
   public static final String MINI_DATA_DIR_PROP = MINI_PREFIX + ".data.dir";
@@ -207,24 +87,19 @@ public class FluoConfiguration extends SimpleConfiguration {
   public static final String MINI_DATA_DIR_DEFAULT = "${env:FLUO_HOME}/mini";
 
   /** The properties below get loaded into/from Zookeeper */
-  // Observer properties
+  // Observer
+  @Deprecated
   public static final String OBSERVER_PREFIX = FLUO_PREFIX + ".observer.";
+
   /**
    * @since 1.1.0
    */
   public static final String OBSERVER_PROVIDER = FLUO_PREFIX + ".observer.provider";
+
   /**
-   * @since 1.2.0
+   * @since 1.1.0
    */
-  public static final String OBSERVER_INIT_DIR_PROP = FLUO_PREFIX + ".observer.init.dir";
-  /**
-   * @since 1.2.0
-   */
-  public static final String OBSERVER_JARS_URL_PROP = FLUO_PREFIX + ".observer.jars.url";
-  // Observer defaults
   public static final String OBSERVER_PROVIDER_DEFAULT = "";
-  public static final String OBSERVER_INIT_DIR_DEFAULT = "";
-  public static final String OBSERVER_JARS_URL_DEFAULT = "";
 
   // Transaction
   public static final String TRANSACTION_PREFIX = FLUO_PREFIX + ".tx";
@@ -234,7 +109,7 @@ public class FluoConfiguration extends SimpleConfiguration {
   // Metrics
   public static final String REPORTER_PREFIX = FLUO_PREFIX + ".metrics.reporter";
 
-  // Application config
+  // application config
   public static final String APP_PREFIX = FLUO_PREFIX + ".app";
 
   public FluoConfiguration() {
@@ -259,6 +134,7 @@ public class FluoConfiguration extends SimpleConfiguration {
 
   public void validate() {
     // keep in alphabetical order
+    getAccumuloClasspath();
     getAccumuloInstance();
     getAccumuloPassword();
     getAccumuloTable();
@@ -266,7 +142,7 @@ public class FluoConfiguration extends SimpleConfiguration {
     getAccumuloZookeepers();
     getApplicationName();
     getAppZookeepers();
-    getConnectionRetryTimeout();
+    getClientRetryTimeout();
     getLoaderQueueSize();
     getLoaderThreads();
     getObserverSpecifications();
@@ -275,35 +151,14 @@ public class FluoConfiguration extends SimpleConfiguration {
     getZookeeperTimeout();
   }
 
-  /**
-   * Sets the {@value #CONNECTION_APPLICATION_NAME_PROP}
-   *
-   * @param applicationName Must not be null
-   */
   public FluoConfiguration setApplicationName(String applicationName) {
     verifyApplicationName(applicationName);
-    setProperty(CONNECTION_APPLICATION_NAME_PROP, applicationName);
+    setProperty(CLIENT_APPLICATION_NAME_PROP, applicationName);
     return this;
   }
 
-  /**
-   * Returns the application name after verification to avoid characters Zookeeper does not like in
-   * nodes and Hadoop does not like in HDFS paths.
-   * <p>
-   * Gets the value of the property {@value #CONNECTION_APPLICATION_NAME_PROP} if set
-   *
-   * @return The application name
-   * @throws NoSuchElementException if the property has not been set
-   */
   public String getApplicationName() {
-    String applicationName;
-    if (containsKey(CONNECTION_APPLICATION_NAME_PROP)) {
-      applicationName = getString(CONNECTION_APPLICATION_NAME_PROP);
-    } else if (containsKey(CLIENT_APPLICATION_NAME_PROP)) {
-      applicationName = getString(CLIENT_APPLICATION_NAME_PROP);
-    } else {
-      throw new NoSuchElementException(CONNECTION_APPLICATION_NAME_PROP + " was not set");
-    }
+    String applicationName = getString(CLIENT_APPLICATION_NAME_PROP);
     verifyApplicationName(applicationName);
     return applicationName;
   }
@@ -313,7 +168,6 @@ public class FluoConfiguration extends SimpleConfiguration {
    * does not like in HDFS paths.
    *
    * @param name Application name
-   * @throws IllegalArgumentException If name contains illegal characters
    */
   private void verifyApplicationName(String name) {
     if (name == null) {
@@ -333,298 +187,109 @@ public class FluoConfiguration extends SimpleConfiguration {
       } else if (c == '/' || c == '.' || c == ':') {
         reason = "invalid character '" + c + "'";
         break;
-      } else if (c > '\u0000' && c <= '\u001f' || c >= '\u007f' && c <= '\u009F'
-          || c >= '\ud800' && c <= '\uf8ff' || c >= '\ufff0' && c <= '\uffff') {
+      } else if (c > '\u0000' && c <= '\u001f' || c >= '\u007f' && c <= '\u009F' || c >= '\ud800'
+          && c <= '\uf8ff' || c >= '\ufff0' && c <= '\uffff') {
         reason = "invalid character @" + i;
         break;
       }
     }
     if (reason != null) {
-      throw new IllegalArgumentException(
-          "Invalid application name \"" + name + "\" caused by " + reason);
+      throw new IllegalArgumentException("Invalid application name \"" + name + "\" caused by "
+          + reason);
     }
   }
 
-  /**
-   * Sets the value of the property {@value #CONNECTION_ZOOKEEPERS_PROP}
-   *
-   * @param zookeepers The instance to use, must not be null.
-   *
-   */
   public FluoConfiguration setInstanceZookeepers(String zookeepers) {
-    return setNonEmptyString(CONNECTION_ZOOKEEPERS_PROP, zookeepers);
+    return setNonEmptyString(CLIENT_ZOOKEEPER_CONNECT_PROP, zookeepers);
   }
 
-  /**
-   * Gets the value of the property {@value #CONNECTION_ZOOKEEPERS_PROP} and if not set returns the
-   * default {@value #CONNECTION_ZOOKEEPERS_DEFAULT}
-   *
-   * @return The zookeeper instance.
-   */
   public String getInstanceZookeepers() {
-    return getDepNonEmptyString(CONNECTION_ZOOKEEPERS_PROP, CLIENT_ZOOKEEPER_CONNECT_PROP,
-        CONNECTION_ZOOKEEPERS_DEFAULT);
+    return getNonEmptyString(CLIENT_ZOOKEEPER_CONNECT_PROP, CLIENT_ZOOKEEPER_CONNECT_DEFAULT);
   }
 
-  /**
-   * Returns the zookeeper application name string.
-   *
-   * @return The zookeeper application string.
-   */
   public String getAppZookeepers() {
     return getInstanceZookeepers() + "/" + getApplicationName();
   }
 
-  /**
-   * Sets the value of the property {@value #CONNECTION_ZOOKEEPER_TIMEOUT_PROP}
-   *
-   * @param timeout This must be a positive integer
-   */
   public FluoConfiguration setZookeeperTimeout(int timeout) {
-    return setPositiveInt(CONNECTION_ZOOKEEPER_TIMEOUT_PROP, timeout);
+    return setPositiveInt(CLIENT_ZOOKEEPER_TIMEOUT_PROP, timeout);
   }
 
-  /**
-   * Gets the value of the property {@value #CONNECTION_ZOOKEEPER_TIMEOUT_PROP} and if not set
-   * returns the default {@value #CONNECTION_ZOOKEEPER_TIMEOUT_DEFAULT}
-   */
   public int getZookeeperTimeout() {
-    return getDepPositiveInt(CONNECTION_ZOOKEEPER_TIMEOUT_PROP, CLIENT_ZOOKEEPER_TIMEOUT_PROP,
-        CONNECTION_ZOOKEEPER_TIMEOUT_DEFAULT);
+    return getPositiveInt(CLIENT_ZOOKEEPER_TIMEOUT_PROP, CLIENT_ZOOKEEPER_TIMEOUT_DEFAULT);
   }
 
-  /**
-   * Get the secret configured to access data in zookeeper. If the secret is an empty string, then
-   * nothing in zookeeper is locked down.
-   *
-   * <p>
-   * Gets the value of the property {@value #CONNECTION_ZOOKEEPER_SECRET}
-   *
-   * @since 1.2.0
-   */
-  public String getZookeeperSecret() {
-    return getString(CONNECTION_ZOOKEEPER_SECRET, "");
-  }
-
-  /**
-   * Setting this before initializing an application will cause Fluo to lock down Zookeeper such
-   * that this secret is required to read data from zookeeper. If set to an empty string, then
-   * nothing in zookeeper will be locked down. This property defaults to an empty string.
-   *
-   * <p>
-   * Sets the value of the property {@value #CONNECTION_ZOOKEEPER_SECRET}
-   *
-   * @since 1.2.0
-   */
-  public void setZookeeperSecret(String secret) {
-    setProperty(CONNECTION_ZOOKEEPER_SECRET, verifyNotNull(CONNECTION_ZOOKEEPER_SECRET, secret));
-  }
-
-  @Deprecated
-  public FluoConfiguration setClientRetryTimeout(int timeoutMs) {
-    return setConnectionRetryTimeout(timeoutMs);
-  }
-
-  @Deprecated
-  public int getClientRetryTimeout() {
-    return getConnectionRetryTimeout();
-  }
-
-  /**
-   * Sets the connection retry timeout property {@value #CONNECTION_RETRY_TIMEOUT_MS_PROP} in
-   * milliseconds. Must be positive.
-   *
-   * @since 1.2.0
-   */
-  public FluoConfiguration setConnectionRetryTimeout(int timeoutMS) {
-    Preconditions.checkArgument(timeoutMS >= -1,
-        CONNECTION_RETRY_TIMEOUT_MS_PROP + " must be >= -1");
-    setProperty(CONNECTION_RETRY_TIMEOUT_MS_PROP, timeoutMS);
+  public FluoConfiguration setClientRetryTimeout(int timeoutMS) {
+    Preconditions.checkArgument(timeoutMS >= -1, CLIENT_RETRY_TIMEOUT_MS_PROP + " must be >= -1");
+    setProperty(CLIENT_RETRY_TIMEOUT_MS_PROP, timeoutMS);
     return this;
   }
 
-  /**
-   * Returns the value of the property {@value #CONNECTION_RETRY_TIMEOUT_MS_PROP} if it is set, else
-   * the default value of {@value #CONNECTION_RETRY_TIMEOUT_MS_DEFAULT}. The integer returned
-   * represents milliseconds and is always positive.
-   *
-   * @since 1.2.0
-   */
-  public int getConnectionRetryTimeout() {
-    int retval;
-    if (containsKey(CONNECTION_RETRY_TIMEOUT_MS_PROP)) {
-      retval = getInt(CONNECTION_RETRY_TIMEOUT_MS_PROP, CONNECTION_RETRY_TIMEOUT_MS_DEFAULT);
-    } else {
-      retval = getInt(CLIENT_RETRY_TIMEOUT_MS_PROP, CONNECTION_RETRY_TIMEOUT_MS_DEFAULT);
-    }
-    Preconditions.checkArgument(retval >= -1, CONNECTION_RETRY_TIMEOUT_MS_PROP + " must be >= -1");
+  public int getClientRetryTimeout() {
+    int retval = getInt(CLIENT_RETRY_TIMEOUT_MS_PROP, CLIENT_RETRY_TIMEOUT_MS_DEFAULT);
+    Preconditions.checkArgument(retval >= -1, CLIENT_RETRY_TIMEOUT_MS_PROP + " must be >= -1");
     return retval;
   }
 
-  /**
-   * Sets the Apache Accumulo instance property {@value #ACCUMULO_INSTANCE_PROP}
-   *
-   * @param accumuloInstance The instance to connect to, must not be empty
-   */
   public FluoConfiguration setAccumuloInstance(String accumuloInstance) {
-    return setNonEmptyString(ACCUMULO_INSTANCE_PROP, accumuloInstance);
+    return setNonEmptyString(CLIENT_ACCUMULO_INSTANCE_PROP, accumuloInstance);
   }
 
-  /**
-   * Gets the Apache Accumulo instance property value {@value #ACCUMULO_INSTANCE_PROP}
-   */
   public String getAccumuloInstance() {
-    return getDepNonEmptyString(ACCUMULO_INSTANCE_PROP, CLIENT_ACCUMULO_INSTANCE_PROP);
+    return getNonEmptyString(CLIENT_ACCUMULO_INSTANCE_PROP);
   }
 
-  /**
-   * Sets the value of the property {@value #ACCUMULO_USER_PROP}
-   *
-   * @param accumuloUser The user name to use, must not be null.
-   */
   public FluoConfiguration setAccumuloUser(String accumuloUser) {
-    return setNonEmptyString(ACCUMULO_USER_PROP, accumuloUser);
+    return setNonEmptyString(CLIENT_ACCUMULO_USER_PROP, accumuloUser);
   }
 
-  /**
-   * Gets the value of the property {@value #ACCUMULO_USER_PROP}
-   */
   public String getAccumuloUser() {
-    return getDepNonEmptyString(ACCUMULO_USER_PROP, CLIENT_ACCUMULO_USER_PROP);
+    return getNonEmptyString(CLIENT_ACCUMULO_USER_PROP);
   }
 
-  /**
-   * Sets the Apache Accumulo password property {@value #ACCUMULO_PASSWORD_PROP}
-   *
-   * @param accumuloPassword The password to use, must not be null.
-   */
   public FluoConfiguration setAccumuloPassword(String accumuloPassword) {
-    setProperty(ACCUMULO_PASSWORD_PROP, verifyNotNull(ACCUMULO_PASSWORD_PROP, accumuloPassword));
+    setProperty(CLIENT_ACCUMULO_PASSWORD_PROP,
+        verifyNotNull(CLIENT_ACCUMULO_PASSWORD_PROP, accumuloPassword));
     return this;
   }
 
-  /**
-   * Gets the Apache Accumulo password property value {@value #ACCUMULO_PASSWORD_PROP}
-   *
-   * @throws NoSuchElementException if {@value #ACCUMULO_PASSWORD_PROP} is not set
-   */
   public String getAccumuloPassword() {
-    if (containsKey(ACCUMULO_PASSWORD_PROP)) {
-      return verifyNotNull(ACCUMULO_PASSWORD_PROP, getString(ACCUMULO_PASSWORD_PROP));
-    } else if (containsKey(CLIENT_ACCUMULO_PASSWORD_PROP)) {
-      return verifyNotNull(CLIENT_ACCUMULO_PASSWORD_PROP, getString(CLIENT_ACCUMULO_PASSWORD_PROP));
-    }
-    throw new NoSuchElementException(ACCUMULO_PASSWORD_PROP + " is not set!");
+    return verifyNotNull(CLIENT_ACCUMULO_PASSWORD_PROP, getString(CLIENT_ACCUMULO_PASSWORD_PROP));
   }
 
-  /**
-   * Sets the value of the property {@value #ACCUMULO_ZOOKEEPERS_PROP}
-   *
-   * @param zookeepers Must not be null
-   */
   public FluoConfiguration setAccumuloZookeepers(String zookeepers) {
-    return setNonEmptyString(ACCUMULO_ZOOKEEPERS_PROP, zookeepers);
+    return setNonEmptyString(CLIENT_ACCUMULO_ZOOKEEPERS_PROP, zookeepers);
   }
 
-  /**
-   * Gets the value of the property {@value #ACCUMULO_ZOOKEEPERS_PROP} if it is set, else returns
-   * the value of the property {@value #ACCUMULO_ZOOKEEPERS_DEFAULT}
-   */
   public String getAccumuloZookeepers() {
-    return getDepNonEmptyString(ACCUMULO_ZOOKEEPERS_PROP, CLIENT_ACCUMULO_ZOOKEEPERS_PROP,
-        ACCUMULO_ZOOKEEPERS_DEFAULT);
+    return getNonEmptyString(CLIENT_ACCUMULO_ZOOKEEPERS_PROP, CLIENT_ACCUMULO_ZOOKEEPERS_DEFAULT);
   }
 
   /**
-   * Sets Accumulo table. This property only needs to be set for FluoAdmin as it will be stored and
+   * Sets Accumulo table. This property only needs to be set for FluoAdmin as it will be stored in
    * retrieved from Zookeeper for clients.
-   * <p>
-   * Sets the value of the property {@value #ACCUMULO_TABLE_PROP}
    */
   public FluoConfiguration setAccumuloTable(String table) {
-    return setNonEmptyString(ACCUMULO_TABLE_PROP, table);
+    return setNonEmptyString(ADMIN_ACCUMULO_TABLE_PROP, table);
   }
 
-  /**
-   * Gets the value of the property {@value #ACCUMULO_TABLE_PROP}
-   */
   public String getAccumuloTable() {
-    return getDepNonEmptyString(ACCUMULO_TABLE_PROP, ADMIN_ACCUMULO_TABLE_PROP);
+    return getNonEmptyString(ADMIN_ACCUMULO_TABLE_PROP);
   }
 
-  @Deprecated
   public FluoConfiguration setAccumuloClasspath(String path) {
     setProperty(ADMIN_ACCUMULO_CLASSPATH_PROP, verifyNotNull(ADMIN_ACCUMULO_CLASSPATH_PROP, path));
     return this;
   }
 
-  @Deprecated
   public String getAccumuloClasspath() {
     return getString(ADMIN_ACCUMULO_CLASSPATH_PROP, ADMIN_ACCUMULO_CLASSPATH_DEFAULT);
   }
 
-  /**
-   * Sets paths to jars to provide to Accumulo. If not set, Fluo will find jars on classpath
-   * <p>
-   * Sets the value of the property {@value #ACCUMULO_JARS_PROP}
-   *
-   * @param path CSV list of paths, must not be null
-   * @since 1.2.0
-   */
-  public FluoConfiguration setAccumuloJars(String path) {
-    setProperty(ACCUMULO_JARS_PROP, verifyNotNull(ACCUMULO_JARS_PROP, path));
-    return this;
-  }
-
-  /**
-   * Gets CSV list of jar paths to provide to Accumulo
-   * <p>
-   * Gets the value of the property {@value #ACCUMULO_JARS_PROP} if set,
-   * {@value #ACCUMULO_JARS_DEFAULT} else
-   *
-   * @since 1.2.0
-   */
-  public String getAccumuloJars() {
-    return getString(ACCUMULO_JARS_PROP, ACCUMULO_JARS_DEFAULT);
-  }
-
-  /**
-   * Sets the root for the Hadoop DFS value in property {@value #DFS_ROOT_PROP}
-   *
-   * @param dfsRoot The path for the dfs root eg: hdfs://host:port/path note: may not be empty.
-   * @since 1.2.0
-   */
-  public FluoConfiguration setDfsRoot(String dfsRoot) {
-    return setNonEmptyString(DFS_ROOT_PROP, dfsRoot);
-  }
-
-  /**
-   * Gets the value of property {@value #DFS_ROOT_PROP} if set, otherwise gets the default
-   * {@value #DFS_ROOT_DEFAULT}
-   *
-   * @since 1.2.0
-   */
-  public String getDfsRoot() {
-    return getString(DFS_ROOT_PROP, DFS_ROOT_DEFAULT);
-  }
-
-  /**
-   * Sets the number of worker threads, must be positive. The default is
-   * {@value #WORKER_NUM_THREADS_DEFAULT} threads. Sets this value in the property
-   * {@value #WORKER_NUM_THREADS_PROP}
-   *
-   * @param numThreads The number of threads to use, must be positive
-   */
   public FluoConfiguration setWorkerThreads(int numThreads) {
     return setPositiveInt(WORKER_NUM_THREADS_PROP, numThreads);
   }
 
-  /**
-   * Gets the value of the property {@value #WORKER_NUM_THREADS_PROP} if set otherwise returns
-   * {@value #WORKER_NUM_THREADS_DEFAULT}
-   *
-   * @return The number of worker threads being used.
-   */
   public int getWorkerThreads() {
     return getPositiveInt(WORKER_NUM_THREADS_PROP, WORKER_NUM_THREADS_DEFAULT);
   }
@@ -642,9 +307,7 @@ public class FluoConfiguration extends SimpleConfiguration {
     while (iter.hasNext()) {
       String key = iter.next();
       if (key.startsWith(FluoConfiguration.OBSERVER_PREFIX)
-          && !key.equals(FluoConfiguration.OBSERVER_PROVIDER)
-          && !key.equals(FluoConfiguration.OBSERVER_INIT_DIR_PROP)
-          && !key.equals(FluoConfiguration.OBSERVER_JARS_URL_PROP)) {
+          && !key.equals(FluoConfiguration.OBSERVER_PROVIDER)) {
         String value = getString(key).trim();
 
         if (value.isEmpty()) {
@@ -669,8 +332,8 @@ public class FluoConfiguration extends SimpleConfiguration {
                 + " has invalid param. Expected 'key=value' but encountered '" + fields[i] + "'");
           }
           if (kv[0].isEmpty() || kv[1].isEmpty()) {
-            throw new IllegalArgumentException(
-                key + " has empty key or value in param: " + fields[i]);
+            throw new IllegalArgumentException(key + " has empty key or value in param: "
+                + fields[i]);
           }
           params.put(kv[0], kv[1]);
         }
@@ -702,8 +365,6 @@ public class FluoConfiguration extends SimpleConfiguration {
 
   /**
    * Configure the observer provider that Fluo workers will use.
-   * <p>
-   * Sets the property of {@value #OBSERVER_PROVIDER}
    *
    * @since 1.1.0
    *
@@ -721,57 +382,6 @@ public class FluoConfiguration extends SimpleConfiguration {
    */
   public void setObserverProvider(Class<? extends ObserverProvider> clazz) {
     setObserverProvider(clazz.getName());
-  }
-
-  /**
-   * Sets directory where observers jars can found for initialization
-   * <p>
-   * Sets the value of the property {@value #OBSERVER_INIT_DIR_PROP}
-   *
-   * @param observerDir Path to directory, must not be null
-   * @since 1.2.0
-   */
-  public FluoConfiguration setObserverInitDir(String observerDir) {
-    setProperty(OBSERVER_INIT_DIR_PROP, verifyNotNull(OBSERVER_INIT_DIR_PROP, observerDir));
-    return this;
-  }
-
-  /**
-   * Gets directory where observer jars can be found for initialization
-   * <p>
-   * Gets the value of the property {@value #OBSERVER_INIT_DIR_PROP} if set,
-   * {@value #OBSERVER_INIT_DIR_DEFAULT} otherwise
-   *
-   * @return Path to directory
-   * @since 1.2.0
-   */
-  public String getObserverInitDir() {
-    return getString(OBSERVER_INIT_DIR_PROP, OBSERVER_INIT_DIR_DEFAULT);
-  }
-
-  /**
-   * Sets URL to directory where observer jars can be found
-   * <p>
-   * Sets the value of the property {@value #OBSERVER_JARS_URL_PROP}
-   *
-   * @param observerJarsUrl URL to observer jars directory, must not be null
-   * @since 1.2.0
-   */
-  public FluoConfiguration setObserverJarsUrl(String observerJarsUrl) {
-    setProperty(OBSERVER_JARS_URL_PROP, verifyNotNull(OBSERVER_JARS_URL_PROP, observerJarsUrl));
-    return this;
-  }
-
-  /**
-   * Gets the directory where observer jars can be found
-   * <p>
-   * Gets the value of the property {@value #OBSERVER_JARS_URL_PROP} if set,
-   * {@value #OBSERVER_JARS_URL_DEFAULT} otherwise
-   *
-   * @since 1.2.0
-   */
-  public String getObserverJarsUrl() {
-    return getString(OBSERVER_JARS_URL_PROP, OBSERVER_JARS_URL_DEFAULT);
   }
 
   /**
@@ -842,74 +452,26 @@ public class FluoConfiguration extends SimpleConfiguration {
     return this;
   }
 
-  /**
-   * Sets the transaction rollback time, in milliseconds.
-   * <p>
-   * Sets the value of the property {@value #TRANSACTION_ROLLBACK_TIME_PROP}
-   *
-   * @param time A long representation of the duration, must be positive
-   * @param tu The TimeUnit to use
-   */
   public FluoConfiguration setTransactionRollbackTime(long time, TimeUnit tu) {
     return setPositiveLong(TRANSACTION_ROLLBACK_TIME_PROP, tu.toMillis(time));
   }
 
-  /**
-   * Gets the transaction rollback time, in milliseconds.
-   * <p>
-   * Gets the value of the property {@value #TRANSACTION_ROLLBACK_TIME_PROP} if set,
-   * {@value #TRANSACTION_ROLLBACK_TIME_DEFAULT} otherwise
-   *
-   * @return A positive long representation of the rollback time.
-   */
   public long getTransactionRollbackTime() {
     return getPositiveLong(TRANSACTION_ROLLBACK_TIME_PROP, TRANSACTION_ROLLBACK_TIME_DEFAULT);
   }
 
-  /**
-   * Sets the non negative number of threads each loader runs. If setting to zero, must also set the
-   * queue size to zero.
-   * <p>
-   * Sets the value of the property {@value #LOADER_NUM_THREADS_PROP}
-   *
-   * @param numThreads Must be positive
-   */
   public FluoConfiguration setLoaderThreads(int numThreads) {
     return setNonNegativeInt(LOADER_NUM_THREADS_PROP, numThreads);
   }
 
-  /**
-   * Returns the number of threads each loader runs.
-   * <p>
-   * Gets the value of the property {@value #LOADER_NUM_THREADS_PROP} if set,
-   * {@value #LOADER_NUM_THREADS_DEFAULT} otherwise
-   *
-   * @return The number of threads each loader runs.
-   */
   public int getLoaderThreads() {
     return getNonNegativeInt(LOADER_NUM_THREADS_PROP, LOADER_NUM_THREADS_DEFAULT);
   }
 
-  /**
-   * Sets the queue size for the loader. This should be set to zero if the number of loader threads
-   * is zero.
-   * <p>
-   * Sets the value of the property {@value #LOADER_QUEUE_SIZE_PROP}
-   *
-   * @param queueSize The non negative size of the queue.
-   */
   public FluoConfiguration setLoaderQueueSize(int queueSize) {
     return setNonNegativeInt(LOADER_QUEUE_SIZE_PROP, queueSize);
   }
 
-  /**
-   * Gets the loader queue size.
-   * <p>
-   * Gets the value of the property {@value #LOADER_QUEUE_SIZE_PROP} if set,
-   * {@value #LOADER_QUEUE_SIZE_DEFAULT} otherwise
-   *
-   * @return the loader queue size.
-   */
   public int getLoaderQueueSize() {
     return getNonNegativeInt(LOADER_QUEUE_SIZE_PROP, LOADER_QUEUE_SIZE_DEFAULT);
   }
@@ -935,37 +497,19 @@ public class FluoConfiguration extends SimpleConfiguration {
     return subset(APP_PREFIX);
   }
 
-  /**
-   * Set the value of the property {@value #MINI_START_ACCUMULO_PROP}
-   *
-   * @param startAccumulo Flag to mini start Accumulo or not
-   */
   public FluoConfiguration setMiniStartAccumulo(boolean startAccumulo) {
     setProperty(MINI_START_ACCUMULO_PROP, startAccumulo);
     return this;
   }
 
-  /**
-   * Gets the value of the property {@value #MINI_START_ACCUMULO_PROP} if set, else gets the value
-   * of {@value #MINI_START_ACCUMULO_DEFAULT}
-   */
   public boolean getMiniStartAccumulo() {
     return getBoolean(MINI_START_ACCUMULO_PROP, MINI_START_ACCUMULO_DEFAULT);
   }
 
-  /**
-   * Sets the value of the property {@value #MINI_DATA_DIR_PROP}
-   *
-   * @param dataDir The path to the directory, must not be null
-   */
   public FluoConfiguration setMiniDataDir(String dataDir) {
     return setNonEmptyString(MINI_DATA_DIR_PROP, dataDir);
   }
 
-  /**
-   * Gets the value of the property {@value #MINI_DATA_DIR_PROP} if set, otherwise gets the value of
-   * the property {@value #MINI_DATA_DIR_DEFAULT}
-   */
   public String getMiniDataDir() {
     return getNonEmptyString(MINI_DATA_DIR_PROP, MINI_DATA_DIR_DEFAULT);
   }
@@ -981,35 +525,20 @@ public class FluoConfiguration extends SimpleConfiguration {
     }
   }
 
-  private boolean verifyStringPropSet(String... keys) {
-    for (String key : keys) {
-      if (containsKey(key) && !getString(key).isEmpty()) {
-        return true;
-      }
+  private boolean verifyStringPropSet(String key) {
+    if (containsKey(key) && !getString(key).isEmpty()) {
+      return true;
     }
-    log.info(keys[0] + " is not set");
+    log.info(key + " is not set");
     return false;
   }
 
-  private boolean verifyStringPropNotSet(String... keys) {
-    for (String key : keys) {
-      if (containsKey(key) && !getString(key).isEmpty()) {
-        log.info(key + " should not be set");
-        return false;
-      }
+  private boolean verifyStringPropNotSet(String key) {
+    if (containsKey(key) && !getString(key).isEmpty()) {
+      log.info(key + " should not be set");
+      return false;
     }
     return true;
-  }
-
-  /**
-   * Verifies that the connection properties are set and and valid.
-   *
-   * @return A boolean if the requirements have been met.
-   */
-  public boolean hasRequiredConnectionProps() {
-    boolean valid = true;
-    valid &= verifyStringPropSet(CONNECTION_APPLICATION_NAME_PROP, CLIENT_APPLICATION_NAME_PROP);
-    return valid;
   }
 
   /**
@@ -1017,10 +546,10 @@ public class FluoConfiguration extends SimpleConfiguration {
    */
   public boolean hasRequiredClientProps() {
     boolean valid = true;
-    valid &= verifyStringPropSet(CONNECTION_APPLICATION_NAME_PROP, CLIENT_APPLICATION_NAME_PROP);
-    valid &= verifyStringPropSet(ACCUMULO_USER_PROP, CLIENT_ACCUMULO_USER_PROP);
-    valid &= verifyStringPropSet(ACCUMULO_PASSWORD_PROP, CLIENT_ACCUMULO_PASSWORD_PROP);
-    valid &= verifyStringPropSet(ACCUMULO_INSTANCE_PROP, CLIENT_ACCUMULO_INSTANCE_PROP);
+    valid &= verifyStringPropSet(CLIENT_APPLICATION_NAME_PROP);
+    valid &= verifyStringPropSet(CLIENT_ACCUMULO_USER_PROP);
+    valid &= verifyStringPropSet(CLIENT_ACCUMULO_PASSWORD_PROP);
+    valid &= verifyStringPropSet(CLIENT_ACCUMULO_INSTANCE_PROP);
     return valid;
   }
 
@@ -1030,7 +559,7 @@ public class FluoConfiguration extends SimpleConfiguration {
   public boolean hasRequiredAdminProps() {
     boolean valid = true;
     valid &= hasRequiredClientProps();
-    valid &= verifyStringPropSet(ACCUMULO_TABLE_PROP, ADMIN_ACCUMULO_TABLE_PROP);
+    valid &= verifyStringPropSet(ADMIN_ACCUMULO_TABLE_PROP);
     return valid;
   }
 
@@ -1059,11 +588,11 @@ public class FluoConfiguration extends SimpleConfiguration {
     boolean valid = true;
     if (getMiniStartAccumulo()) {
       // ensure that client properties are not set since we are using MiniAccumulo
-      valid &= verifyStringPropNotSet(ACCUMULO_USER_PROP, CLIENT_ACCUMULO_USER_PROP);
-      valid &= verifyStringPropNotSet(ACCUMULO_PASSWORD_PROP, CLIENT_ACCUMULO_PASSWORD_PROP);
-      valid &= verifyStringPropNotSet(ACCUMULO_INSTANCE_PROP, CLIENT_ACCUMULO_INSTANCE_PROP);
-      valid &= verifyStringPropNotSet(ACCUMULO_ZOOKEEPERS_PROP, CLIENT_ACCUMULO_ZOOKEEPERS_PROP);
-      valid &= verifyStringPropNotSet(CONNECTION_ZOOKEEPERS_PROP, CLIENT_ZOOKEEPER_CONNECT_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ACCUMULO_USER_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ACCUMULO_PASSWORD_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ACCUMULO_INSTANCE_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ACCUMULO_ZOOKEEPERS_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ZOOKEEPER_CONNECT_PROP);
       if (valid == false) {
         log.error("Client properties should not be set in your configuration if MiniFluo is "
             + "configured to start its own accumulo (indicated by fluo.mini.start.accumulo being "
@@ -1078,18 +607,12 @@ public class FluoConfiguration extends SimpleConfiguration {
     return valid;
   }
 
-  /**
-   * Returns a SimpleConfiguration clientConfig with properties set from this configuration
-   *
-   * @return SimpleConfiguration
-   */
   public SimpleConfiguration getClientConfiguration() {
     SimpleConfiguration clientConfig = new SimpleConfiguration();
     Iterator<String> iter = getKeys();
     while (iter.hasNext()) {
       String key = iter.next();
-      if (key.startsWith(CONNECTION_PREFIX) || key.startsWith(ACCUMULO_PREFIX)
-          || key.startsWith(CLIENT_PREFIX)) {
+      if (key.startsWith(CLIENT_PREFIX)) {
         clientConfig.setProperty(key, getRawString(key));
       }
     }
@@ -1111,10 +634,9 @@ public class FluoConfiguration extends SimpleConfiguration {
    * not have defaults and will not be set.
    */
   public static void setDefaultConfiguration(SimpleConfiguration config) {
-    config.setProperty(CONNECTION_ZOOKEEPERS_PROP, CONNECTION_ZOOKEEPERS_DEFAULT);
-    config.setProperty(CONNECTION_ZOOKEEPER_TIMEOUT_PROP, CONNECTION_ZOOKEEPER_TIMEOUT_DEFAULT);
-    config.setProperty(DFS_ROOT_PROP, DFS_ROOT_DEFAULT);
-    config.setProperty(ACCUMULO_ZOOKEEPERS_PROP, ACCUMULO_ZOOKEEPERS_DEFAULT);
+    config.setProperty(CLIENT_ZOOKEEPER_CONNECT_PROP, CLIENT_ZOOKEEPER_CONNECT_DEFAULT);
+    config.setProperty(CLIENT_ZOOKEEPER_TIMEOUT_PROP, CLIENT_ZOOKEEPER_TIMEOUT_DEFAULT);
+    config.setProperty(CLIENT_ACCUMULO_ZOOKEEPERS_PROP, CLIENT_ACCUMULO_ZOOKEEPERS_DEFAULT);
     config.setProperty(WORKER_NUM_THREADS_PROP, WORKER_NUM_THREADS_DEFAULT);
     config.setProperty(TRANSACTION_ROLLBACK_TIME_PROP, TRANSACTION_ROLLBACK_TIME_DEFAULT);
     config.setProperty(LOADER_NUM_THREADS_PROP, LOADER_NUM_THREADS_DEFAULT);
@@ -1145,14 +667,6 @@ public class FluoConfiguration extends SimpleConfiguration {
     int value = getInt(property, defaultValue);
     Preconditions.checkArgument(value > 0, property + " must be positive");
     return value;
-  }
-
-  private int getDepPositiveInt(String property, String depProperty, int defaultValue) {
-    if (containsKey(property)) {
-      return getInt(property, defaultValue);
-    } else {
-      return getInt(depProperty, defaultValue);
-    }
   }
 
   private FluoConfiguration setPositiveLong(String property, long value) {
@@ -1188,22 +702,8 @@ public class FluoConfiguration extends SimpleConfiguration {
     return value;
   }
 
-  private String getDepNonEmptyString(String property, String depProperty, String defaultValue) {
-    return containsKey(property) ? getNonEmptyString(property, defaultValue)
-        : getNonEmptyString(depProperty, defaultValue);
-  }
-
-  private String getDepNonEmptyString(String property, String depProperty) {
-    if (containsKey(property)) {
-      return getNonEmptyString(property);
-    } else if (containsKey(depProperty)) {
-      return getNonEmptyString(depProperty);
-    } else {
-      throw new NoSuchElementException(property + " is not set!");
-    }
-  }
-
   private static String verifyNotNull(String property, String value) {
-    return Objects.requireNonNull(value, property + " cannot be null");
+    Objects.requireNonNull(value, property + " cannot be null");
+    return value;
   }
 }

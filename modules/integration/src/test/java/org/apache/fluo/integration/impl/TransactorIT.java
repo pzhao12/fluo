@@ -24,14 +24,11 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.Timeout;
 
 /**
  * Tests transactor classes
  */
 public class TransactorIT extends ITBaseImpl {
-  @Rule
-  public Timeout globalTimeout = Timeout.seconds(getTestTimeout());
 
   public static Long id1 = Long.valueOf(2);
   public static Long id2 = Long.valueOf(3);
@@ -57,10 +54,10 @@ public class TransactorIT extends ITBaseImpl {
     Assert.assertEquals(id2, t2.getTransactorID().getLongID());
     Assert.assertTrue(checkExists(t1));
     Assert.assertTrue(checkExists(t2));
-    Assert.assertArrayEquals("2".getBytes(),
-        env.getSharedResources().getCurator().getData().forPath(t1.getNodePath()));
-    Assert.assertArrayEquals("3".getBytes(),
-        env.getSharedResources().getCurator().getData().forPath(t2.getNodePath()));
+    Assert.assertArrayEquals("2".getBytes(), env.getSharedResources().getCurator().getData()
+        .forPath(t1.getNodePath()));
+    Assert.assertArrayEquals("3".getBytes(), env.getSharedResources().getCurator().getData()
+        .forPath(t2.getNodePath()));
 
     // verify the cache
     Assert.assertTrue(cache.checkExists(id1));

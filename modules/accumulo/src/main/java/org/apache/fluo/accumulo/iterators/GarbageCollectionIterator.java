@@ -4,9 +4,9 @@
  * copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -16,6 +16,8 @@
 package org.apache.fluo.accumulo.iterators;
 
 import java.io.IOException;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,10 +34,8 @@ import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.fluo.accumulo.util.ColumnConstants;
-import org.apache.fluo.accumulo.util.ReadLockUtil;
 import org.apache.fluo.accumulo.util.ZookeeperUtil;
 import org.apache.fluo.accumulo.values.DelLockValue;
-import org.apache.fluo.accumulo.values.DelReadLockValue;
 import org.apache.fluo.accumulo.values.WriteValue;
 
 /**
@@ -44,17 +44,29 @@ import org.apache.fluo.accumulo.values.WriteValue;
  */
 public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Value> {
 
+  private static class KeyValue extends SimpleImmutableEntry<Key, Value> {
+    private static final long serialVersionUID = 1L;
+
+    public KeyValue(Key key, Value value) {
+      super(new Key(key), new Value(value));
+    }
+
+    public KeyValue(Key key, byte[] value) {
+      super(new Key(key), new Value(value));
+    }
+  }
+
   @VisibleForTesting
   static final String GC_TIMESTAMP_OPT = "timestamp.gc";
 
   private static final String ZOOKEEPER_CONNECT_OPT = "zookeeper.connect";
-  private static final ByteSequence NOTIFY_CF_BS =
-      new ArrayByteSequence(ColumnConstants.NOTIFY_CF.toArray());
+  private static final ByteSequence NOTIFY_CF_BS = new ArrayByteSequence(
+      ColumnConstants.NOTIFY_CF.toArray());
   private Long gcTimestamp;
   private SortedKeyValueIterator<Key, Value> source;
 
-  private ColumnBuffer keys = new ColumnBuffer();
-  private ColumnBuffer keysFiltered = new ColumnBuffer();
+  private ArrayList<KeyValue> keys = new ArrayList<>();
+  private ArrayList<KeyValue> keysFiltered = new ArrayList<>();
   private HashSet<Long> completeTxs = new HashSet<>();
   private HashSet<Long> rolledback = new HashSet<>();
   private Key curCol = new Key();
@@ -65,11 +77,11 @@ public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Va
   @Override
   public void init(SortedKeyValueIterator<Key, Value> source, Map<String, String> options,
       IteratorEnvironment env) throws IOException {
-
     if (env.getIteratorScope() == IteratorScope.scan) {
       throw new IllegalArgumentException();
     }
     this.source = source;
+
     isFullMajc = env.getIteratorScope() == IteratorScope.majc && env.isFullMajorCompaction();
 
     String oats = options.get(GC_TIMESTAMP_OPT);
@@ -157,7 +169,6 @@ public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Va
     boolean oldestSeen = false;
     boolean sawAck = false;
     long firstWrite = -1;
-    long lastReadLockDeleteTs = -1;
 
     truncationTime = -1;
 
@@ -180,7 +191,7 @@ public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Va
       long ts = source.getTopKey().getTimestamp() & ColumnConstants.TIMESTAMP_MASK;
 
       if (colType == ColumnConstants.TX_DONE_PREFIX) {
-        keys.add(source.getTopKey(), source.getTopValue());
+        keys.add(new KeyValue(source.getTopKey(), source.getTopValue()));
         completeTxs.add(ts);
       } else if (colType == ColumnConstants.WRITE_PREFIX) {
         boolean keep = false;
@@ -213,7 +224,7 @@ public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Va
         }
 
         if (keep) {
-          keys.add(source.getTopKey(), val);
+          keys.add(new KeyValue(source.getTopKey(), val));
         } else if (complete) {
           completeTxs.remove(ts);
         }
@@ -238,46 +249,13 @@ public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Va
         }
 
         if (keep) {
-          keys.add(source.getTopKey(), source.getTopValue());
+          keys.add(new KeyValue(source.getTopKey(), source.getTopValue()));
         } else if (complete) {
           completeTxs.remove(txDoneTs);
         }
-      } else if (colType == ColumnConstants.RLOCK_PREFIX) {
-        boolean keep = false;
-        long rlts = ReadLockUtil.decodeTs(ts);
-        boolean isDelete = ReadLockUtil.isDelete(ts);
-
-        if (isDelete) {
-          lastReadLockDeleteTs = rlts;
-        }
-
-        if (rlts > invalidationTime) {
-          if (isFullMajc) {
-            if (isDelete) {
-              if (DelReadLockValue.isRollback(source.getTopValue().get())) {
-                // can drop rolled back read lock delete markers on any full majc, do not need to
-                // consider gcTimestamp
-                keep = false;
-              } else {
-                long rlockCommitTs =
-                    DelReadLockValue.getCommitTimestamp(source.getTopValue().get());
-                keep = rlockCommitTs >= gcTimestamp;
-              }
-            } else {
-              keep = lastReadLockDeleteTs != rlts;
-            }
-          } else {
-            // can drop deleted read lock entries.. keep the delete entry.
-            keep = isDelete || lastReadLockDeleteTs != rlts;
-          }
-        }
-
-        if (keep) {
-          keys.add(source.getTopKey(), source.getTopValue());
-        }
       } else if (colType == ColumnConstants.LOCK_PREFIX) {
         if (ts > invalidationTime) {
-          keys.add(source.getTopKey(), source.getTopValue());
+          keys.add(new KeyValue(source.getTopKey(), source.getTopValue()));
         }
       } else if (colType == ColumnConstants.DATA_PREFIX) {
         // can stop looking
@@ -285,7 +263,7 @@ public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Va
       } else if (colType == ColumnConstants.ACK_PREFIX) {
         if (!sawAck) {
           if (ts >= firstWrite) {
-            keys.add(source.getTopKey(), source.getTopValue());
+            keys.add(new KeyValue(source.getTopKey(), source.getTopValue()));
           }
           sawAck = true;
         }
@@ -296,20 +274,22 @@ public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Va
       source.next();
     }
 
-    keys.copyTo(keysFiltered, (timestamp -> {
-      long colType = timestamp & ColumnConstants.PREFIX_MASK;
+    for (KeyValue kv : keys) {
+      long colType = kv.getKey().getTimestamp() & ColumnConstants.PREFIX_MASK;
       if (colType == ColumnConstants.TX_DONE_PREFIX) {
-        return completeTxs.contains(timestamp & ColumnConstants.TIMESTAMP_MASK);
+        if (completeTxs.contains(kv.getKey().getTimestamp() & ColumnConstants.TIMESTAMP_MASK)) {
+          keysFiltered.add(kv);
+        }
       } else {
-        return true;
+        keysFiltered.add(kv);
       }
-    }));
+    }
   }
 
   @Override
   public Key getTopKey() {
     if (position < keysFiltered.size()) {
-      return keysFiltered.getKey(position);
+      return keysFiltered.get(position).getKey();
     } else {
       return source.getTopKey();
     }
@@ -318,7 +298,7 @@ public class GarbageCollectionIterator implements SortedKeyValueIterator<Key, Va
   @Override
   public Value getTopValue() {
     if (position < keysFiltered.size()) {
-      return keysFiltered.getValue(position);
+      return keysFiltered.get(position).getValue();
     } else {
       return source.getTopValue();
     }

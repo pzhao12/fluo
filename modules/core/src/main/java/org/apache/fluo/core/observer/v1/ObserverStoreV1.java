@@ -4,9 +4,9 @@
  * copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -30,11 +30,13 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.fluo.accumulo.util.ZookeeperPath;
 import org.apache.fluo.api.config.FluoConfiguration;
+import org.apache.fluo.api.config.ObserverSpecification;
 import org.apache.fluo.api.config.SimpleConfiguration;
 import org.apache.fluo.api.data.Column;
 import org.apache.fluo.api.exceptions.FluoException;
 import org.apache.fluo.api.observer.Observer;
 import org.apache.fluo.api.observer.Observer.NotificationType;
+import org.apache.fluo.api.observer.Observer.ObservedColumn;
 import org.apache.fluo.core.impl.Environment;
 import org.apache.fluo.core.observer.ObserverStore;
 import org.apache.fluo.core.observer.Observers;
@@ -56,20 +58,18 @@ public class ObserverStoreV1 implements ObserverStore {
 
   @Override
   public boolean handles(FluoConfiguration config) {
-    Collection<org.apache.fluo.api.config.ObserverSpecification> obsSpecs =
-        config.getObserverSpecifications();
+    Collection<ObserverSpecification> obsSpecs = config.getObserverSpecifications();
     return !obsSpecs.isEmpty();
   }
 
   @Override
   public void update(CuratorFramework curator, FluoConfiguration config) throws Exception {
-    Collection<org.apache.fluo.api.config.ObserverSpecification> obsSpecs =
-        config.getObserverSpecifications();
+    Collection<ObserverSpecification> obsSpecs = config.getObserverSpecifications();
 
-    Map<Column, org.apache.fluo.api.config.ObserverSpecification> colObservers = new HashMap<>();
-    Map<Column, org.apache.fluo.api.config.ObserverSpecification> weakObservers = new HashMap<>();
+    Map<Column, ObserverSpecification> colObservers = new HashMap<>();
+    Map<Column, ObserverSpecification> weakObservers = new HashMap<>();
 
-    for (org.apache.fluo.api.config.ObserverSpecification ospec : obsSpecs) {
+    for (ObserverSpecification ospec : obsSpecs) {
       Observer observer;
       try {
         observer = Class.forName(ospec.getClassName()).asSubclass(Observer.class).newInstance();
@@ -78,22 +78,21 @@ public class ObserverStoreV1 implements ObserverStore {
             + "found.  Check for class name misspellings or failure to include "
             + "the observer jar.", e1);
       } catch (InstantiationException | IllegalAccessException e2) {
-        throw new FluoException(
-            "Observer class '" + ospec.getClassName() + "' could not be created.", e2);
+        throw new FluoException("Observer class '" + ospec.getClassName()
+            + "' could not be created.", e2);
       }
 
       SimpleConfiguration oc = ospec.getConfiguration();
       logger.info("Setting up observer {} using params {}.", observer.getClass().getSimpleName(),
           oc.toMap());
       try {
-        observer.init(new ObserverContext(config.getAppConfiguration(), oc));
+        observer.init(new ObserverContext(config.subset(FluoConfiguration.APP_PREFIX), oc));
       } catch (Exception e) {
         throw new FluoException("Observer '" + ospec.getClassName() + "' could not be initialized",
             e);
       }
 
-      org.apache.fluo.api.observer.Observer.ObservedColumn observedCol =
-          observer.getObservedColumn();
+      ObservedColumn observedCol = observer.getObservedColumn();
       if (observedCol.getType() == NotificationType.STRONG) {
         colObservers.put(observedCol.getColumn(), ospec);
       } else {
@@ -105,9 +104,8 @@ public class ObserverStoreV1 implements ObserverStore {
   }
 
   private static void updateObservers(CuratorFramework curator,
-      Map<Column, org.apache.fluo.api.config.ObserverSpecification> colObservers,
-      Map<Column, org.apache.fluo.api.config.ObserverSpecification> weakObservers)
-      throws Exception {
+      Map<Column, ObserverSpecification> colObservers,
+      Map<Column, ObserverSpecification> weakObservers) throws Exception {
 
     // TODO check that no workers are running... or make workers watch this znode
 
@@ -117,8 +115,8 @@ public class ObserverStoreV1 implements ObserverStore {
     } catch (NoNodeException nne) {
       // it's ok if node doesn't exist
     } catch (Exception e) {
-      logger.error("An error occurred deleting Zookeeper node. node=[" + observerPath + "], error=["
-          + e.getMessage() + "]");
+      logger.error("An error occurred deleting Zookeeper node. node=[" + observerPath
+          + "], error=[" + e.getMessage() + "]");
       throw new RuntimeException(e);
     }
 
@@ -128,16 +126,14 @@ public class ObserverStoreV1 implements ObserverStore {
   }
 
   private static void serializeObservers(DataOutputStream dos,
-      Map<Column, org.apache.fluo.api.config.ObserverSpecification> colObservers)
-      throws IOException {
+      Map<Column, ObserverSpecification> colObservers) throws IOException {
     // TODO use a human readable serialized format like json
 
-    Set<Entry<Column, org.apache.fluo.api.config.ObserverSpecification>> es =
-        colObservers.entrySet();
+    Set<Entry<Column, ObserverSpecification>> es = colObservers.entrySet();
 
     WritableUtils.writeVInt(dos, colObservers.size());
 
-    for (Entry<Column, org.apache.fluo.api.config.ObserverSpecification> entry : es) {
+    for (Entry<Column, ObserverSpecification> entry : es) {
       ColumnUtil.writeColumn(entry.getKey(), dos);
       dos.writeUTF(entry.getValue().getClassName());
       Map<String, String> params = entry.getValue().getConfiguration().toMap();
@@ -149,10 +145,8 @@ public class ObserverStoreV1 implements ObserverStore {
     }
   }
 
-  private static byte[] serializeObservers(
-      Map<Column, org.apache.fluo.api.config.ObserverSpecification> colObservers,
-      Map<Column, org.apache.fluo.api.config.ObserverSpecification> weakObservers)
-      throws IOException {
+  private static byte[] serializeObservers(Map<Column, ObserverSpecification> colObservers,
+      Map<Column, ObserverSpecification> weakObservers) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (DataOutputStream dos = new DataOutputStream(baos)) {
       serializeObservers(dos, colObservers);
@@ -163,11 +157,12 @@ public class ObserverStoreV1 implements ObserverStore {
     return serializedObservers;
   }
 
-  private static Map<Column, org.apache.fluo.api.config.ObserverSpecification> readObservers(
-      DataInputStream dis) throws IOException {
 
-    ImmutableMap.Builder<Column, org.apache.fluo.api.config.ObserverSpecification> omapBuilder =
-        new ImmutableMap.Builder<>();
+  private static Map<Column, ObserverSpecification> readObservers(DataInputStream dis)
+      throws IOException {
+
+    ImmutableMap.Builder<Column, ObserverSpecification> omapBuilder =
+        new ImmutableMap.Builder<Column, ObserverSpecification>();
 
     int num = WritableUtils.readVInt(dis);
     for (int i = 0; i < num; i++) {
@@ -181,8 +176,7 @@ public class ObserverStoreV1 implements ObserverStore {
         params.put(k, v);
       }
 
-      org.apache.fluo.api.config.ObserverSpecification ospec =
-          new org.apache.fluo.api.config.ObserverSpecification(clazz, params);
+      ObserverSpecification ospec = new ObserverSpecification(clazz, params);
       omapBuilder.put(col, ospec);
     }
     return omapBuilder.build();
@@ -191,8 +185,8 @@ public class ObserverStoreV1 implements ObserverStore {
   @Override
   public RegisteredObservers load(CuratorFramework curator) throws Exception {
 
-    Map<Column, org.apache.fluo.api.config.ObserverSpecification> observers;
-    Map<Column, org.apache.fluo.api.config.ObserverSpecification> weakObservers;
+    Map<Column, ObserverSpecification> observers;
+    Map<Column, ObserverSpecification> weakObservers;
 
     ByteArrayInputStream bais;
     try {
@@ -205,6 +199,7 @@ public class ObserverStoreV1 implements ObserverStore {
 
     observers = readObservers(dis);
     weakObservers = readObservers(dis);
+
 
     return new RegisteredObservers() {
 

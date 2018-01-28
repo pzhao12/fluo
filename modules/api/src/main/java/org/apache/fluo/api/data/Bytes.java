@@ -4,9 +4,9 @@
  * copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -39,12 +39,12 @@ import com.google.common.primitives.UnsignedBytes;
  * it at the moment. Its very nice having this immutable type, it avoids having to do defensive
  * copies to ensure correctness. Maybe one day Java will have equivalents of String, StringBuilder,
  * and Charsequence for bytes.
- *
+ * 
  * <p>
  * The reason Fluo did not use ByteBuffer is because its not immutable, even a read only ByteBuffer
  * has a mutable position. This makes ByteBuffer unsuitable for place where an immutable data type
  * is desirable, like a key for a map.
- *
+ * 
  * <p>
  * Bytes.EMPTY is used to represent a Bytes object with no data.
  *
@@ -199,67 +199,19 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
   public final int compareTo(Bytes other) {
     if (this == other) {
       return 0;
+    } else if (this.length == this.data.length && other.length == other.data.length) {
+      return UnsignedBytes.lexicographicalComparator().compare(this.data, other.data);
     } else {
-      return compareToUnchecked(other.data, other.offset, other.length);
-    }
-  }
-
-  /**
-   * Compares this to the passed bytes, byte by byte, returning a negative, zero, or positive result
-   * if the first sequence is less than, equal to, or greater than the second. The comparison is
-   * performed starting with the first byte of each sequence, and proceeds until a pair of bytes
-   * differs, or one sequence runs out of byte (is shorter). A shorter sequence is considered less
-   * than a longer one.
-   *
-   * @since 1.2.0
-   * @return comparison result
-   */
-  public int compareTo(byte[] bytes) {
-    return compareToUnchecked(bytes, 0, bytes.length);
-  }
-
-  /**
-   * Compares this to the passed bytes, byte by byte, returning a negative, zero, or positive result
-   * if the first sequence is less than, equal to, or greater than the second. The comparison is
-   * performed starting with the first byte of each sequence, and proceeds until a pair of bytes
-   * differs, or one sequence runs out of byte (is shorter). A shorter sequence is considered less
-   * than a longer one.
-   *
-   * This method checks the arguments passed to it.
-   *
-   * @since 1.2.0
-   * @return comparison result
-   */
-  public int compareTo(byte[] bytes, int offset, int len) {
-    Preconditions.checkArgument(offset >= 0 && len >= 0 && offset + len <= bytes.length);
-    return compareToUnchecked(bytes, offset, len);
-  }
-
-  /**
-   * Compares this to the passed bytes, byte by byte, returning a negative, zero, or positive result
-   * if the first sequence is less than, equal to, or greater than the second. The comparison is
-   * performed starting with the first byte of each sequence, and proceeds until a pair of bytes
-   * differs, or one sequence runs out of byte (is shorter). A shorter sequence is considered less
-   * than a longer one.
-   *
-   * This method does not check the arguments passed to it.
-   *
-   * @since 1.2.0
-   * @return comparison result
-   */
-  private int compareToUnchecked(byte[] bytes, int offset, int len) {
-    if (this.length == this.data.length && len == bytes.length) {
-      return UnsignedBytes.lexicographicalComparator().compare(this.data, bytes);
-    } else {
-      int minLen = Math.min(this.length, len);
-      for (int i = this.offset, j = offset; i < minLen; i++, j++) {
+      int minLen = Math.min(this.length, other.length);
+      for (int i = this.offset, j = other.offset; i < minLen; i++, j++) {
         int a = (this.data[i] & 0xff);
-        int b = (bytes[j] & 0xff);
+        int b = (other.data[j] & 0xff);
+
         if (a != b) {
           return a - b;
         }
       }
-      return this.length - len;
+      return this.length - other.length;
     }
   }
 
@@ -276,41 +228,13 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
     if (other instanceof Bytes) {
       Bytes ob = (Bytes) other;
 
-      return contentEqualsUnchecked(ob.data, ob.offset, ob.length);
+      if (length != ob.length) {
+        return false;
+      }
+
+      return compareTo(ob) == 0;
     }
     return false;
-  }
-
-  /**
-   * Returns true if this Bytes object equals another.
-   *
-   * @since 1.2.0
-   */
-  public boolean contentEquals(byte[] bytes) {
-    return contentEqualsUnchecked(bytes, 0, bytes.length);
-  }
-
-  /**
-   * Returns true if this Bytes object equals another. This method checks it's arguments.
-   *
-   * @since 1.2.0
-   */
-  public boolean contentEquals(byte[] bytes, int offset, int len) {
-    Preconditions.checkArgument(len >= 0 && offset >= 0 && offset + len <= bytes.length);
-    return contentEqualsUnchecked(bytes, offset, len);
-  }
-
-  /**
-   * Returns true if this Bytes object equals another. This method doesn't check it's arguments.
-   *
-   * @since 1.2.0
-   */
-  private boolean contentEqualsUnchecked(byte[] bytes, int offset, int len) {
-    if (length != len) {
-      return false;
-    }
-
-    return compareToUnchecked(bytes, offset, len) == 0;
   }
 
   @Override
@@ -358,7 +282,7 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
 
   /**
    * Creates a Bytes object by copying the data of the given ByteBuffer.
-   *
+   * 
    * @param bb Data will be read from this ByteBuffer in such a way that its position is not
    *        changed.
    */
@@ -369,8 +293,9 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
     }
     byte[] data;
     if (bb.hasArray()) {
-      data = Arrays.copyOfRange(bb.array(), bb.position() + bb.arrayOffset(),
-          bb.limit() + bb.arrayOffset());
+      data =
+          Arrays.copyOfRange(bb.array(), bb.position() + bb.arrayOffset(),
+              bb.limit() + bb.arrayOffset());
     } else {
       data = new byte[bb.remaining()];
       // duplicate so that it does not change position
@@ -431,7 +356,7 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
 
   /**
    * Checks if this has the passed prefix
-   *
+   * 
    * @param prefix is a Bytes object to compare to this
    * @return true or false
    * @since 1.1.0
@@ -454,7 +379,7 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
 
   /**
    * Checks if this has the passed suffix
-   *
+   * 
    * @param suffix is a Bytes object to compare to this
    * @return true or false
    * @since 1.1.0
@@ -560,7 +485,7 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
 
     /**
      * Append a section of bytes from array
-     *
+     * 
      * @param bytes - bytes to be appended
      * @param offset - start of bytes to be appended
      * @param length - how many bytes from 'offset' to be appended
@@ -575,7 +500,7 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
 
     /**
      * Append a sequence of bytes from an InputStream
-     *
+     * 
      * @param in data source to append from
      * @param length number of bytes to read from data source
      * @return self
@@ -589,7 +514,7 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
 
     /**
      * Append data from a ByteBuffer
-     *
+     * 
      * @param bb data is read from the ByteBuffer in such a way that its position is not changed.
      * @return self
      */
@@ -644,7 +569,7 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
   /**
    * Copy entire Bytes object to specific byte array. Uses the specified offset in the dest byte
    * array to start the copy.
-   *
+   * 
    * @param dest destination array
    * @param destPos starting position in the destination data.
    * @exception IndexOutOfBoundsException if copying would cause access of data outside array
@@ -660,7 +585,7 @@ public final class Bytes implements Comparable<Bytes>, Serializable {
   /**
    * Copy a subsequence of Bytes to specific byte array. Uses the specified offset in the dest byte
    * array to start the copy.
-   *
+   * 
    * @param start index of subsequence start (inclusive)
    * @param end index of subsequence end (exclusive)
    * @param dest destination array

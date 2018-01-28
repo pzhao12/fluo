@@ -51,8 +51,9 @@ public class PartitionNotificationFinder implements NotificationFinder {
 
     partitionManager = new PartitionManager(env, minSleepTime, maxSleepTime);
 
-    scanThread = new Thread(
-        new ScanTask(this, processor, partitionManager, env, stopped, minSleepTime, maxSleepTime));
+    scanThread =
+        new Thread(new ScanTask(this, processor, partitionManager, env, stopped, minSleepTime,
+            maxSleepTime));
     scanThread.setName(getClass().getSimpleName() + " " + ScanTask.class.getSimpleName());
     scanThread.setDaemon(true);
     scanThread.start();

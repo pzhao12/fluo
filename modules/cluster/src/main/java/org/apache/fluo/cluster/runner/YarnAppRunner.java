@@ -4,9 +4,9 @@
  * copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -30,6 +30,11 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.fluo.accumulo.util.ZookeeperPath;
 import org.apache.fluo.api.config.FluoConfiguration;
 import org.apache.fluo.api.exceptions.FluoException;
+import org.apache.fluo.cluster.runnable.OracleRunnable;
+import org.apache.fluo.cluster.runnable.WorkerRunnable;
+import org.apache.fluo.cluster.util.FluoYarnConfig;
+import org.apache.fluo.cluster.yarn.FluoTwillApp;
+import org.apache.fluo.cluster.yarn.TwillUtil;
 import org.apache.fluo.core.client.FluoAdminImpl;
 import org.apache.fluo.core.util.CuratorUtil;
 import org.apache.hadoop.fs.Path;
@@ -47,7 +52,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Yarn Implementation of ClusterAppRunner
  */
-@Deprecated
 public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
 
   private static final Logger log = LoggerFactory.getLogger(YarnAppRunner.class);
@@ -133,8 +137,10 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
           if (twillIdExists(appConfig)) {
             String twillId = getTwillId(appConfig);
             yarnId = getAppId(appConfig);
-            TwillController controller = getTwillRunner(appConfig).lookup(
-                getYarnApplicationName(appConfig.getApplicationName()), RunIds.fromString(twillId));
+            TwillController controller =
+                getTwillRunner(appConfig).lookup(
+                    getYarnApplicationName(appConfig.getApplicationName()),
+                    RunIds.fromString(twillId));
             if (controller == null) {
               state = "STOPPED";
             } else {
@@ -157,13 +163,14 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
     if (twillIdExists(config)) {
       String runId = getTwillId(config);
 
-      TwillController controller = getTwillRunner(config)
-          .lookup(getYarnApplicationName(config.getApplicationName()), RunIds.fromString(runId));
+      TwillController controller =
+          getTwillRunner(config).lookup(getYarnApplicationName(config.getApplicationName()),
+              RunIds.fromString(runId));
       if ((controller != null) && isReady(controller)) {
-        throw new FluoException(
-            "A YARN application " + getAppInfo(config) + " is already running for the Fluo '"
-                + config.getApplicationName() + "' application!  Please stop it using 'fluo stop "
-                + config.getApplicationName() + "' before starting a new one.");
+        throw new FluoException("A YARN application " + getAppInfo(config)
+            + " is already running for the Fluo '" + config.getApplicationName()
+            + "' application!  Please stop it using 'fluo stop " + config.getApplicationName()
+            + "' before starting a new one.");
       }
     }
 
@@ -180,8 +187,7 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
       throw new FluoException("Invalid fluo.properties due to " + e.getMessage(), e);
     }
 
-    TwillPreparer preparer = getTwillRunner(config)
-        .prepare(new org.apache.fluo.cluster.yarn.FluoTwillApp(config, appConfDir));
+    TwillPreparer preparer = getTwillRunner(config).prepare(new FluoTwillApp(config, appConfDir));
 
     // Add jars from fluo lib/ directory that are not being loaded by Twill.
     try {
@@ -252,8 +258,9 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
     checkIfInitialized(config);
     String twillId = verifyTwillId(config);
 
-    TwillController controller = getTwillRunner(config)
-        .lookup(getYarnApplicationName(config.getApplicationName()), RunIds.fromString(twillId));
+    TwillController controller =
+        getTwillRunner(config).lookup(getYarnApplicationName(config.getApplicationName()),
+            RunIds.fromString(twillId));
     if ((controller != null) && isReady(controller)) {
       System.out.print("Stopping Fluo '" + config.getApplicationName() + "' application "
           + getAppInfo(config) + "...");
@@ -270,8 +277,9 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
 
     String twillId = verifyTwillId(config);
 
-    TwillController controller = getTwillRunner(config)
-        .lookup(getYarnApplicationName(config.getApplicationName()), RunIds.fromString(twillId));
+    TwillController controller =
+        getTwillRunner(config).lookup(getYarnApplicationName(config.getApplicationName()),
+            RunIds.fromString(twillId));
     if (controller != null) {
       System.out.print("Killing Fluo '" + config.getApplicationName() + "' application "
           + getAppInfo(config) + "...");
@@ -299,8 +307,9 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
       }
       elapsed += 500;
       if ((maxWaitMs != -1) && (elapsed > maxWaitMs)) {
-        String msg = String.format("Exceeded max wait time to retrieve ResourceReport from Twill."
-            + " Elapsed time = %s ms", elapsed);
+        String msg =
+            String.format("Exceeded max wait time to retrieve ResourceReport from Twill."
+                + " Elapsed time = %s ms", elapsed);
         log.error(msg);
         throw new IllegalStateException(msg);
       }
@@ -323,24 +332,17 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
   }
 
   private boolean allContainersRunning(TwillController controller, FluoConfiguration config) {
-    return org.apache.fluo.cluster.yarn.TwillUtil.numRunning(controller,
-        org.apache.fluo.cluster.runnable.OracleRunnable.ORACLE_NAME) == org.apache.fluo.cluster.util.FluoYarnConfig
-            .getOracleInstances(config)
-        && org.apache.fluo.cluster.yarn.TwillUtil.numRunning(controller,
-            org.apache.fluo.cluster.runnable.WorkerRunnable.WORKER_NAME) == org.apache.fluo.cluster.util.FluoYarnConfig
-                .getWorkerInstances(config);
+    return TwillUtil.numRunning(controller, OracleRunnable.ORACLE_NAME) == FluoYarnConfig
+        .getOracleInstances(config)
+        && TwillUtil.numRunning(controller, WorkerRunnable.WORKER_NAME) == FluoYarnConfig
+            .getWorkerInstances(config);
   }
 
   private String containerStatus(TwillController controller, FluoConfiguration config) {
-    return ""
-        + org.apache.fluo.cluster.yarn.TwillUtil.numRunning(controller,
-            org.apache.fluo.cluster.runnable.OracleRunnable.ORACLE_NAME)
-        + " of " + org.apache.fluo.cluster.util.FluoYarnConfig.getOracleInstances(config)
-        + " Oracle containers and "
-        + org.apache.fluo.cluster.yarn.TwillUtil.numRunning(controller,
-            org.apache.fluo.cluster.runnable.WorkerRunnable.WORKER_NAME)
-        + " of " + org.apache.fluo.cluster.util.FluoYarnConfig.getWorkerInstances(config)
-        + " Worker containers";
+    return "" + TwillUtil.numRunning(controller, OracleRunnable.ORACLE_NAME) + " of "
+        + FluoYarnConfig.getOracleInstances(config) + " Oracle containers and "
+        + TwillUtil.numRunning(controller, WorkerRunnable.WORKER_NAME) + " of "
+        + FluoYarnConfig.getWorkerInstances(config) + " Worker containers";
   }
 
   public void status(FluoConfiguration config, boolean extraInfo) {
@@ -351,8 +353,9 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
       return;
     }
     String twillId = getTwillId(config);
-    TwillController controller = getTwillRunner(config)
-        .lookup(getYarnApplicationName(config.getApplicationName()), RunIds.fromString(twillId));
+    TwillController controller =
+        getTwillRunner(config).lookup(getYarnApplicationName(config.getApplicationName()),
+            RunIds.fromString(twillId));
     if (controller == null) {
       System.out.print("Fluo '" + config.getApplicationName() + "' application "
           + getAppInfo(config) + " has stopped.");
@@ -369,19 +372,15 @@ public class YarnAppRunner extends ClusterAppRunner implements AutoCloseable {
       if (extraInfo) {
         ResourceReport report = getResourceReport(controller, 30000);
         Collection<TwillRunResources> resources;
-        resources = report
-            .getRunnableResources(org.apache.fluo.cluster.runnable.OracleRunnable.ORACLE_NAME);
+        resources = report.getRunnableResources(OracleRunnable.ORACLE_NAME);
         System.out.println("\nThe application has " + resources.size() + " of "
-            + org.apache.fluo.cluster.util.FluoYarnConfig.getOracleInstances(config)
-            + " desired Oracle containers:\n");
-        org.apache.fluo.cluster.yarn.TwillUtil.printResources(resources);
+            + FluoYarnConfig.getOracleInstances(config) + " desired Oracle containers:\n");
+        TwillUtil.printResources(resources);
 
-        resources = report
-            .getRunnableResources(org.apache.fluo.cluster.runnable.WorkerRunnable.WORKER_NAME);
+        resources = report.getRunnableResources(WorkerRunnable.WORKER_NAME);
         System.out.println("\nThe application has " + resources.size() + " of "
-            + org.apache.fluo.cluster.util.FluoYarnConfig.getWorkerInstances(config)
-            + " desired Worker containers:\n");
-        org.apache.fluo.cluster.yarn.TwillUtil.printResources(resources);
+            + FluoYarnConfig.getWorkerInstances(config) + " desired Worker containers:\n");
+        TwillUtil.printResources(resources);
       }
     }
   }

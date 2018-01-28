@@ -23,7 +23,6 @@ import org.apache.twill.api.TwillRunResources;
 /**
  * Twill Utility classes
  */
-@Deprecated
 public class TwillUtil {
 
   private TwillUtil() {}

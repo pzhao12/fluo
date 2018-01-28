@@ -18,12 +18,16 @@ package org.apache.fluo.core.async;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.accumulo.core.client.ConditionalWriter;
 import org.apache.accumulo.core.client.ConditionalWriter.Result;
 import org.apache.accumulo.core.data.ConditionalMutation;
@@ -32,51 +36,71 @@ import org.apache.fluo.core.impl.FluoConfigurationImpl;
 import org.apache.fluo.core.util.FluoExecutors;
 import org.apache.fluo.core.util.Limit;
 
-public class AsyncConditionalWriter {
+public class AsyncConditionalWriter implements
+    AsyncFunction<Collection<ConditionalMutation>, Iterator<Result>> {
 
   private final ConditionalWriter cw;
-  private final ExecutorService es;
+  private final ListeningExecutorService les;
   private final Limit semaphore;
 
 
   public AsyncConditionalWriter(Environment env, ConditionalWriter cw) {
     this.cw = cw;
-    int numThreads = env.getConfiguration().getInt(FluoConfigurationImpl.ASYNC_CW_THREADS,
-        FluoConfigurationImpl.ASYNC_CW_THREADS_DEFAULT);
-    int permits = env.getConfiguration().getInt(FluoConfigurationImpl.ASYNC_CW_LIMIT,
-        FluoConfigurationImpl.ASYNC_CW_LIMIT_DEFAULT);
-    this.es = FluoExecutors.newFixedThreadPool(numThreads, "asyncCw");
+    int numThreads =
+        env.getConfiguration().getInt(FluoConfigurationImpl.ASYNC_CW_THREADS,
+            FluoConfigurationImpl.ASYNC_CW_THREADS_DEFAULT);
+    int permits =
+        env.getConfiguration().getInt(FluoConfigurationImpl.ASYNC_CW_LIMIT,
+            FluoConfigurationImpl.ASYNC_CW_LIMIT_DEFAULT);
+    this.les =
+        MoreExecutors.listeningDecorator(FluoExecutors.newFixedThreadPool(numThreads, "asyncCW"));
     // the conditional writer currently has not memory limits... give it too much and it blows out
     // memory.. need to fix this in conditional writer
     // for now this needs to be memory based
     this.semaphore = new Limit(permits);
   }
 
-  public CompletableFuture<Iterator<Result>> apply(Collection<ConditionalMutation> input) {
-    if (input.size() == 0) {
-      return CompletableFuture.completedFuture(Collections.<Result>emptyList().iterator());
+  private class IterTask implements Callable<Iterator<Result>> {
+
+    private Iterator<Result> input;
+    private int permitsAcquired;
+
+    public IterTask(Iterator<Result> iter, int permitsAcquired) {
+      this.input = iter;
+      this.permitsAcquired = permitsAcquired;
     }
 
-    semaphore.acquire(input.size());
-    Iterator<Result> iter = cw.write(input.iterator());
-    return CompletableFuture.supplyAsync(() -> {
+    @Override
+    public Iterator<Result> call() throws Exception {
       try {
         Builder<Result> imlb = ImmutableList.builder();
-        while (iter.hasNext()) {
-          Result result = iter.next();
+        while (input.hasNext()) {
+          Result result = input.next();
           imlb.add(result);
         }
         return imlb.build().iterator();
       } finally {
-        semaphore.release(input.size());
+        semaphore.release(permitsAcquired);
       }
-    }, es);
+    }
+
+  }
+
+  @Override
+  public ListenableFuture<Iterator<Result>> apply(Collection<ConditionalMutation> input) {
+    if (input.size() == 0) {
+      return Futures.immediateFuture(Collections.<Result>emptyList().iterator());
+    }
+
+    semaphore.acquire(input.size());
+    Iterator<Result> iter = cw.write(input.iterator());
+    return les.submit(new IterTask(iter, input.size()));
   }
 
   public void close() {
-    es.shutdownNow();
+    les.shutdownNow();
     try {
-      es.awaitTermination(5, TimeUnit.SECONDS);
+      les.awaitTermination(5, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
