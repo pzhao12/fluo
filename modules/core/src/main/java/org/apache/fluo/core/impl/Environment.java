@@ -15,9 +15,11 @@
 
 package org.apache.fluo.core.impl;
 
+import java.io.ByteArrayInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.accumulo.core.client.Connector;
@@ -28,11 +30,10 @@ import org.apache.fluo.accumulo.util.ZookeeperPath;
 import org.apache.fluo.api.config.FluoConfiguration;
 import org.apache.fluo.api.config.SimpleConfiguration;
 import org.apache.fluo.api.metrics.MetricsReporter;
-import org.apache.fluo.core.client.FluoAdminImpl;
 import org.apache.fluo.core.metrics.MetricNames;
 import org.apache.fluo.core.metrics.MetricsReporterImpl;
-import org.apache.fluo.core.observer.ObserverUtil;
 import org.apache.fluo.core.observer.RegisteredObservers;
+import org.apache.fluo.core.observer.ObserverUtil;
 import org.apache.fluo.core.util.AccumuloUtil;
 import org.apache.fluo.core.util.CuratorUtil;
 
@@ -118,15 +119,25 @@ public class Environment implements AutoCloseable {
           new String(curator.getData().forPath(ZookeeperPath.CONFIG_FLUO_APPLICATION_ID),
               StandardCharsets.UTF_8);
 
-      table = new String(curator.getData().forPath(ZookeeperPath.CONFIG_ACCUMULO_TABLE),
-          StandardCharsets.UTF_8);
+      table =
+          new String(curator.getData().forPath(ZookeeperPath.CONFIG_ACCUMULO_TABLE),
+              StandardCharsets.UTF_8);
 
       observers = ObserverUtil.load(curator);
 
-      config = FluoAdminImpl.mergeZookeeperConfig(config);
+      ByteArrayInputStream bais =
+          new ByteArrayInputStream(curator.getData().forPath(ZookeeperPath.CONFIG_SHARED));
+      Properties sharedProps = new Properties();
+      sharedProps.load(bais);
+
+      FluoConfiguration tmpConfig = new FluoConfiguration();
+      for (String prop : sharedProps.stringPropertyNames()) {
+        config.setProperty(prop, sharedProps.getProperty(prop));
+        tmpConfig.setProperty(prop, sharedProps.getProperty(prop));
+      }
 
       // make sure not to include config passed to env, only want config from zookeeper
-      appConfig = config.getAppConfiguration();
+      appConfig = tmpConfig.getAppConfiguration();
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }

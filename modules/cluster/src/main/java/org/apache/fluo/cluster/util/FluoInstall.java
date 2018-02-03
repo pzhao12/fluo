@@ -20,7 +20,6 @@ import java.io.File;
 import org.apache.fluo.api.config.FluoConfiguration;
 import org.apache.fluo.api.exceptions.FluoException;
 
-@Deprecated
 public class FluoInstall {
 
   private String fluoHomeDir;
@@ -144,8 +143,7 @@ public class FluoInstall {
 
   private void verifyAppPath(String appName, String path) {
     if (!(new File(path).exists())) {
-      throw new FluoException(
-          "Path does not exist for Fluo '" + appName + "' application: " + path);
+      throw new FluoException("Path does not exist for Fluo '" + appName + "' application: " + path);
     }
   }
 }

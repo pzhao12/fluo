@@ -40,10 +40,12 @@ public class TracingCellScanner implements CellScanner {
 
   @Override
   public Iterator<RowColumnValue> iterator() {
-    return Iterators.transform(wrappedScanner.iterator(), rcv -> {
-      log.trace("txid: {} scanId: {} next()-> {} {}", txid, scanId,
-          Hex.encNonAscii(rcv.getRowColumn()), Hex.encNonAscii(rcv.getValue()));
-      return rcv;
-    });
+    return Iterators.transform(
+        wrappedScanner.iterator(),
+        rcv -> {
+          log.trace("txid: {} scanId: {} next()-> {} {}", txid, scanId,
+              Hex.encNonAscii(rcv.getRowColumn()), Hex.encNonAscii(rcv.getValue()));
+          return rcv;
+        });
   }
 }

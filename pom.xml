@@ -17,12 +17,12 @@
   <parent>
     <groupId>org.apache.fluo</groupId>
     <artifactId>fluo-parent</artifactId>
-    <version>2</version>
+    <version>1-incubating</version>
   </parent>
   <artifactId>fluo-project</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.2.0-incubating-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>Apache Fluo Project</name>
+  <name>Apache Fluo (incubating) Project</name>
   <description>An implementation of Percolator for Apache Accumulo</description>
   <licenses>
     <license>
@@ -36,27 +36,26 @@
     <module>modules/api</module>
     <module>modules/cluster</module>
     <module>modules/core</module>
-    <module>modules/command</module>
     <module>modules/distribution</module>
     <module>modules/integration</module>
     <module>modules/mapreduce</module>
     <module>modules/mini</module>
   </modules>
   <scm>
-    <connection>scm:git:https://gitbox.apache.org/repos/asf/fluo.git</connection>
-    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/fluo.git</developerConnection>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/incubator-fluo.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/incubator-fluo.git</developerConnection>
     <tag>HEAD</tag>
-    <url>https://gitbox.apache.org/repos/asf?p=fluo.git</url>
+    <url>https://gitbox.apache.org/repos/asf?p=incubator-fluo.git</url>
   </scm>
   <issueManagement>
     <system>GitHub</system>
-    <url>https://github.com/apache/fluo/issues</url>
+    <url>https://github.com/apache/incubator-fluo/issues</url>
   </issueManagement>
   <properties>
     <accumulo.version>1.6.5</accumulo.version>
     <curator.version>2.7.1</curator.version>
     <dropwizard.version>0.8.1</dropwizard.version>
-    <findbugs.maxRank>11</findbugs.maxRank>
+    <findbugs.maxRank>9</findbugs.maxRank>
     <hadoop.version>2.6.3</hadoop.version>
     <logback.version>1.1.3</logback.version>
     <releaseProfiles>fluo-release</releaseProfiles>
@@ -170,11 +169,6 @@
       <dependency>
         <groupId>org.apache.fluo</groupId>
         <artifactId>fluo-cluster</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.fluo</groupId>
-        <artifactId>fluo-command</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -315,6 +309,35 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>accumulo-api-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <checkstyleRules>
+                <module name="Checker">
+                  <module name="TreeWalker">
+                    <module name="AvoidStarImport"/>
+                    <module name="RegexpSinglelineJava">
+                      <!--check that only Accumulo public APIs are imported-->
+                      <property name="format" value="import\s+org\.apache\.accumulo\.(.*\.(impl|thrift)\..*|(?!core|minicluster).*|core\.(?!client|data|iterators|security\.Authorizations|security\.ColumnVisibility|util\.format\.Formatter).*|core\.data\.(?!Key|Mutation|Value|Range|Condition|ConditionalMutation|ByteSequence|PartialKey|ColumnUpdate|ArrayByteSequence).*)"/>
+                      <property name="ignoreComments" value="true"/>
+                      <property name="message" value="Accumulo non-public classes imported"/>
+                    </module>
+                  </module>
+                </module>
+              </checkstyleRules>
+              <failOnViolation>true</failOnViolation>
+              <outputFile>${project.build.directory}/checkstyle-results-accumulo.xml</outputFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>

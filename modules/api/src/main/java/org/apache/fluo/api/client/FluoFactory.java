@@ -25,6 +25,8 @@ import org.apache.fluo.api.exceptions.FluoException;
 import org.apache.fluo.api.mini.MiniFluo;
 import org.apache.fluo.api.service.FluoOracle;
 import org.apache.fluo.api.service.FluoWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.fluo.api.config.FluoConfiguration.FLUO_PREFIX;
 
@@ -35,6 +37,8 @@ import static org.apache.fluo.api.config.FluoConfiguration.FLUO_PREFIX;
  * @since 1.0.0
  */
 public class FluoFactory {
+
+  private static final Logger log = LoggerFactory.getLogger(FluoFactory.class);
 
   private static final String FLUO_IMPL_PREFIX = FLUO_PREFIX + ".impl";
   private static final String CLIENT_CLASS_PROP = FLUO_IMPL_PREFIX + ".client.class";
@@ -51,9 +55,10 @@ public class FluoFactory {
   /**
    * Creates a {@link FluoClient} for reading and writing data to Fluo. {@link FluoClient#close()}
    * should be called when you are finished using it. Configuration (see {@link FluoConfiguration})
-   * should contain properties with connection.* prefix. Please review all connection.* properties
-   * but many have a default. At a minimum, configuration should contain the following properties
-   * that have no default: fluo.connection.application.name
+   * should contain properties with client.* prefix. Please review all client.* properties but many
+   * have a default. At a minimum, configuration should contain the following properties that have
+   * no default: fluo.client.accumulo.user, fluo.client.accumulo.password,
+   * fluo.client.accumulo.instance
    */
   public static FluoClient newClient(SimpleConfiguration configuration) {
     return getAndBuildClassWithConfig(configuration, CLIENT_CLASS_PROP, CLIENT_CLASS_DEFAULT);
@@ -61,10 +66,11 @@ public class FluoFactory {
 
   /**
    * Creates a {@link FluoAdmin} client for administering Fluo. Configuration (see
-   * {@link FluoConfiguration}) should contain all Fluo configuration properties. Review all
-   * properties but many have a default. At a minimum, configuration should contain the following
-   * properties that have no default: fluo.connection.application.name, fluo.accumulo.user,
-   * fluo.accumulo.password, fluo.accumulo.instance, fluo.accumulo.table, fluo.accumulo.classpath
+   * {@link FluoConfiguration}) should contain properties with client.* and admin.* prefix. Please
+   * review all properties but many have a default. At a minimum, configuration should contain the
+   * following properties that have no default: fluo.client.accumulo.user,
+   * fluo.client.accumulo.password, fluo.client.accumulo.instance, fluo.admin.accumulo.table,
+   * fluo.admin.accumulo.classpath
    */
   public static FluoAdmin newAdmin(SimpleConfiguration configuration) {
     return getAndBuildClassWithConfig(configuration, ADMIN_CLASS_PROP, ADMIN_CLASS_DEFAULT);
@@ -82,20 +88,14 @@ public class FluoFactory {
   }
 
   /**
-   * Creates a {@link FluoOracle}. Configuration (see {@link FluoConfiguration}) should contain
-   * properties with connection.* prefix. Please review all connection.* properties but many have a
-   * default. At a minimum, configuration should contain the following properties that have no
-   * default: fluo.connection.application.name
+   * Creates a {@link FluoOracle} using the provided configuration.
    */
   public static FluoOracle newOracle(SimpleConfiguration configuration) {
     return getAndBuildClassWithConfig(configuration, ORACLE_CLASS_PROP, ORACLE_CLASS_DEFAULT);
   }
 
   /**
-   * Creates a {@link FluoWorker}. Configuration (see {@link FluoConfiguration}) should contain
-   * properties with connection.* prefix. Please review all connection.* properties but many have a
-   * default. At a minimum, configuration should contain the following properties that have no
-   * default: fluo.connection.application.name
+   * Creates a {@link FluoWorker} using the provided configuration.
    */
   public static FluoWorker newWorker(SimpleConfiguration configuration) {
     return getAndBuildClassWithConfig(configuration, WORKER_CLASS_PROP, WORKER_CLASS_DEFAULT);
@@ -116,13 +116,17 @@ public class FluoFactory {
       return (T) Class.forName(clazz).getDeclaredConstructor(FluoConfiguration.class)
           .newInstance(config);
     } catch (ClassNotFoundException e) {
-      String msg = "Could not find " + clazz
-          + " class which could be caused by fluo-core jar not being on the classpath.";
+      String msg =
+          "Could not find " + clazz
+              + " class which could be caused by fluo-core jar not being on the classpath.";
+      log.error(msg);
       throw new FluoException(msg, e);
     } catch (InvocationTargetException e) {
       String msg = "Failed to construct " + clazz + " class due to exception";
+      log.error(msg, e);
       throw new FluoException(msg, e);
     } catch (Exception e) {
+      log.error("Could not instantiate class - " + clazz);
       throw new FluoException(e);
     }
   }

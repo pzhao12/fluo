@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Run method of Fluo worker that is called within a Twill/YARN application
  */
-@Deprecated
 public class WorkerRunnable extends AbstractTwillRunnable {
 
   private static final Logger log = LoggerFactory.getLogger(WorkerRunnable.class);
@@ -76,7 +75,7 @@ public class WorkerRunnable extends AbstractTwillRunnable {
         System.exit(-1);
       }
       // any client in worker should retry forever
-      config.setConnectionRetryTimeout(-1);
+      config.setClientRetryTimeout(-1);
 
       try {
         config.validate();

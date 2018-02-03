@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -48,158 +47,39 @@ public class FluoConfiguration extends SimpleConfiguration {
 
   // Client properties
   private static final String CLIENT_PREFIX = FLUO_PREFIX + ".client";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.connection.application.name
-   */
-  @Deprecated
   public static final String CLIENT_APPLICATION_NAME_PROP = CLIENT_PREFIX + ".application.name";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.password
-   */
-  @Deprecated
   public static final String CLIENT_ACCUMULO_PASSWORD_PROP = CLIENT_PREFIX + ".accumulo.password";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.user
-   */
-  @Deprecated
   public static final String CLIENT_ACCUMULO_USER_PROP = CLIENT_PREFIX + ".accumulo.user";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.instance
-   */
-  @Deprecated
   public static final String CLIENT_ACCUMULO_INSTANCE_PROP = CLIENT_PREFIX + ".accumulo.instance";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.zookeepers
-   */
-  @Deprecated
-  public static final String CLIENT_ACCUMULO_ZOOKEEPERS_PROP =
-      CLIENT_PREFIX + ".accumulo.zookeepers";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.connection.zookeeper.timeout
-   */
-  @Deprecated
+  public static final String CLIENT_ACCUMULO_ZOOKEEPERS_PROP = CLIENT_PREFIX
+      + ".accumulo.zookeepers";
   public static final String CLIENT_ZOOKEEPER_TIMEOUT_PROP = CLIENT_PREFIX + ".zookeeper.timeout";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.connection.zookeepers
-   */
-  @Deprecated
   public static final String CLIENT_ZOOKEEPER_CONNECT_PROP = CLIENT_PREFIX + ".zookeeper.connect";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.connection.retry.timeout.ms
-   */
-  @Deprecated
   public static final String CLIENT_RETRY_TIMEOUT_MS_PROP = CLIENT_PREFIX + ".retry.timeout.ms";
-  @Deprecated
   public static final int CLIENT_ZOOKEEPER_TIMEOUT_DEFAULT = 30000;
-  @Deprecated
   public static final String CLIENT_ACCUMULO_ZOOKEEPERS_DEFAULT = "localhost";
-  @Deprecated
   public static final String CLIENT_ZOOKEEPER_CONNECT_DEFAULT = "localhost/fluo";
-  @Deprecated
   public static final int CLIENT_RETRY_TIMEOUT_MS_DEFAULT = -1;
 
-  // Connection properties
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_PREFIX = FLUO_PREFIX + ".connection";
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_APPLICATION_NAME_PROP =
-      CONNECTION_PREFIX + ".application.name";
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_ZOOKEEPER_TIMEOUT_PROP =
-      CONNECTION_PREFIX + ".zookeeper.timeout";
-
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_ZOOKEEPER_SECRET = CONNECTION_PREFIX + ".zookeeper.secret";
-
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_ZOOKEEPERS_PROP = CONNECTION_PREFIX + ".zookeepers";
-
-  /**
-   * @since 1.2.0
-   */
-  public static final String CONNECTION_RETRY_TIMEOUT_MS_PROP =
-      CONNECTION_PREFIX + ".retry.timeout.ms";
-  public static final int CONNECTION_ZOOKEEPER_TIMEOUT_DEFAULT = 30000;
-  public static final String CONNECTION_ZOOKEEPERS_DEFAULT = "localhost/fluo";
-  public static final int CONNECTION_RETRY_TIMEOUT_MS_DEFAULT = -1;
-
-  // Accumulo properties
-  private static final String ACCUMULO_PREFIX = FLUO_PREFIX + ".accumulo";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_INSTANCE_PROP = ACCUMULO_PREFIX + ".instance";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_TABLE_PROP = ACCUMULO_PREFIX + ".table";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_PASSWORD_PROP = ACCUMULO_PREFIX + ".password";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_USER_PROP = ACCUMULO_PREFIX + ".user";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_ZOOKEEPERS_PROP = ACCUMULO_PREFIX + ".zookeepers";
-  /**
-   * @since 1.2.0
-   */
-  public static final String ACCUMULO_JARS_PROP = ACCUMULO_PREFIX + ".jars";
-  // Accumulo defaults
-  public static final String ACCUMULO_ZOOKEEPERS_DEFAULT = "localhost";
-  public static final String ACCUMULO_JARS_DEFAULT = "";
-
-  // DFS properties
-  private static final String DFS_PREFIX = FLUO_PREFIX + ".dfs";
-  /**
-   * @since 1.2.0
-   */
-  public static final String DFS_ROOT_PROP = DFS_PREFIX + ".root";
-  // DFS defaults
-  public static final String DFS_ROOT_DEFAULT = "hdfs://localhost:8020/fluo";
-
-  // Administration properties
+  // Administration
   private static final String ADMIN_PREFIX = FLUO_PREFIX + ".admin";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.accumulo.table
-   */
-  @Deprecated
   public static final String ADMIN_ACCUMULO_TABLE_PROP = ADMIN_PREFIX + ".accumulo.table";
-  /**
-   * @deprecated since 1.2.0 replaced by fluo.observer.init.dir and fluo.observer.jars.url
-   */
-  @Deprecated
   public static final String ADMIN_ACCUMULO_CLASSPATH_PROP = ADMIN_PREFIX + ".accumulo.classpath";
-  @Deprecated
   public static final String ADMIN_ACCUMULO_CLASSPATH_DEFAULT = "";
 
-  // Worker properties
+  // Worker
   private static final String WORKER_PREFIX = FLUO_PREFIX + ".worker";
   public static final String WORKER_NUM_THREADS_PROP = WORKER_PREFIX + ".num.threads";
   public static final int WORKER_NUM_THREADS_DEFAULT = 10;
 
-  // Loader properties
+  // Loader
   private static final String LOADER_PREFIX = FLUO_PREFIX + ".loader";
   public static final String LOADER_NUM_THREADS_PROP = LOADER_PREFIX + ".num.threads";
   public static final String LOADER_QUEUE_SIZE_PROP = LOADER_PREFIX + ".queue.size";
   public static final int LOADER_NUM_THREADS_DEFAULT = 10;
   public static final int LOADER_QUEUE_SIZE_DEFAULT = 10;
 
-  // MiniFluo properties
+  // MiniFluo
   private static final String MINI_PREFIX = FLUO_PREFIX + ".mini";
   public static final String MINI_START_ACCUMULO_PROP = MINI_PREFIX + ".start.accumulo";
   public static final String MINI_DATA_DIR_PROP = MINI_PREFIX + ".data.dir";
@@ -207,24 +87,19 @@ public class FluoConfiguration extends SimpleConfiguration {
   public static final String MINI_DATA_DIR_DEFAULT = "${env:FLUO_HOME}/mini";
 
   /** The properties below get loaded into/from Zookeeper */
-  // Observer properties
+  // Observer
+  @Deprecated
   public static final String OBSERVER_PREFIX = FLUO_PREFIX + ".observer.";
+
   /**
    * @since 1.1.0
    */
   public static final String OBSERVER_PROVIDER = FLUO_PREFIX + ".observer.provider";
+
   /**
-   * @since 1.2.0
+   * @since 1.1.0
    */
-  public static final String OBSERVER_INIT_DIR_PROP = FLUO_PREFIX + ".observer.init.dir";
-  /**
-   * @since 1.2.0
-   */
-  public static final String OBSERVER_JARS_URL_PROP = FLUO_PREFIX + ".observer.jars.url";
-  // Observer defaults
   public static final String OBSERVER_PROVIDER_DEFAULT = "";
-  public static final String OBSERVER_INIT_DIR_DEFAULT = "";
-  public static final String OBSERVER_JARS_URL_DEFAULT = "";
 
   // Transaction
   public static final String TRANSACTION_PREFIX = FLUO_PREFIX + ".tx";
@@ -234,7 +109,7 @@ public class FluoConfiguration extends SimpleConfiguration {
   // Metrics
   public static final String REPORTER_PREFIX = FLUO_PREFIX + ".metrics.reporter";
 
-  // Application config
+  // application config
   public static final String APP_PREFIX = FLUO_PREFIX + ".app";
 
   public FluoConfiguration() {
@@ -259,6 +134,7 @@ public class FluoConfiguration extends SimpleConfiguration {
 
   public void validate() {
     // keep in alphabetical order
+    getAccumuloClasspath();
     getAccumuloInstance();
     getAccumuloPassword();
     getAccumuloTable();
@@ -266,7 +142,7 @@ public class FluoConfiguration extends SimpleConfiguration {
     getAccumuloZookeepers();
     getApplicationName();
     getAppZookeepers();
-    getConnectionRetryTimeout();
+    getClientRetryTimeout();
     getLoaderQueueSize();
     getLoaderThreads();
     getObserverSpecifications();
@@ -277,19 +153,12 @@ public class FluoConfiguration extends SimpleConfiguration {
 
   public FluoConfiguration setApplicationName(String applicationName) {
     verifyApplicationName(applicationName);
-    setProperty(CONNECTION_APPLICATION_NAME_PROP, applicationName);
+    setProperty(CLIENT_APPLICATION_NAME_PROP, applicationName);
     return this;
   }
 
   public String getApplicationName() {
-    String applicationName;
-    if (containsKey(CONNECTION_APPLICATION_NAME_PROP)) {
-      applicationName = getString(CONNECTION_APPLICATION_NAME_PROP);
-    } else if (containsKey(CLIENT_APPLICATION_NAME_PROP)) {
-      applicationName = getString(CLIENT_APPLICATION_NAME_PROP);
-    } else {
-      throw new NoSuchElementException(CONNECTION_APPLICATION_NAME_PROP + " was not set");
-    }
+    String applicationName = getString(CLIENT_APPLICATION_NAME_PROP);
     verifyApplicationName(applicationName);
     return applicationName;
   }
@@ -318,25 +187,24 @@ public class FluoConfiguration extends SimpleConfiguration {
       } else if (c == '/' || c == '.' || c == ':') {
         reason = "invalid character '" + c + "'";
         break;
-      } else if (c > '\u0000' && c <= '\u001f' || c >= '\u007f' && c <= '\u009F'
-          || c >= '\ud800' && c <= '\uf8ff' || c >= '\ufff0' && c <= '\uffff') {
+      } else if (c > '\u0000' && c <= '\u001f' || c >= '\u007f' && c <= '\u009F' || c >= '\ud800'
+          && c <= '\uf8ff' || c >= '\ufff0' && c <= '\uffff') {
         reason = "invalid character @" + i;
         break;
       }
     }
     if (reason != null) {
-      throw new IllegalArgumentException(
-          "Invalid application name \"" + name + "\" caused by " + reason);
+      throw new IllegalArgumentException("Invalid application name \"" + name + "\" caused by "
+          + reason);
     }
   }
 
   public FluoConfiguration setInstanceZookeepers(String zookeepers) {
-    return setNonEmptyString(CONNECTION_ZOOKEEPERS_PROP, zookeepers);
+    return setNonEmptyString(CLIENT_ZOOKEEPER_CONNECT_PROP, zookeepers);
   }
 
   public String getInstanceZookeepers() {
-    return getDepNonEmptyString(CONNECTION_ZOOKEEPERS_PROP, CLIENT_ZOOKEEPER_CONNECT_PROP,
-        CONNECTION_ZOOKEEPERS_DEFAULT);
+    return getNonEmptyString(CLIENT_ZOOKEEPER_CONNECT_PROP, CLIENT_ZOOKEEPER_CONNECT_DEFAULT);
   }
 
   public String getAppZookeepers() {
@@ -344,112 +212,57 @@ public class FluoConfiguration extends SimpleConfiguration {
   }
 
   public FluoConfiguration setZookeeperTimeout(int timeout) {
-    return setPositiveInt(CONNECTION_ZOOKEEPER_TIMEOUT_PROP, timeout);
+    return setPositiveInt(CLIENT_ZOOKEEPER_TIMEOUT_PROP, timeout);
   }
 
   public int getZookeeperTimeout() {
-    return getDepPositiveInt(CONNECTION_ZOOKEEPER_TIMEOUT_PROP, CLIENT_ZOOKEEPER_TIMEOUT_PROP,
-        CONNECTION_ZOOKEEPER_TIMEOUT_DEFAULT);
+    return getPositiveInt(CLIENT_ZOOKEEPER_TIMEOUT_PROP, CLIENT_ZOOKEEPER_TIMEOUT_DEFAULT);
   }
 
-  /**
-   * Get the secret configured to access data in zookeeper. If the secret is an empty string, then
-   * nothing in zookeeper is locked down.
-   *
-   * <p>
-   * Gets the value of the property {@value #CONNECTION_ZOOKEEPER_SECRET}
-   *
-   * @since 1.2.0
-   */
-  public String getZookeeperSecret() {
-    return getString(CONNECTION_ZOOKEEPER_SECRET, "");
-  }
-
-  /**
-   * Setting this before initializing an application will cause Fluo to lock down Zookeeper such
-   * that this secret is required to read data from zookeeper. If set to an empty string, then
-   * nothing in zookeeper will be locked down. This property defaults to an empty string.
-   *
-   * <p>
-   * Sets the value of the property {@value #CONNECTION_ZOOKEEPER_SECRET}
-   *
-   * @since 1.2.0
-   */
-  public void setZookeeperSecret(String secret) {
-    setProperty(CONNECTION_ZOOKEEPER_SECRET, verifyNotNull(CONNECTION_ZOOKEEPER_SECRET, secret));
-  }
-
-  @Deprecated
-  public FluoConfiguration setClientRetryTimeout(int timeoutMs) {
-    return setConnectionRetryTimeout(timeoutMs);
-  }
-
-  @Deprecated
-  public int getClientRetryTimeout() {
-    return getConnectionRetryTimeout();
-  }
-
-  /**
-   * @since 1.2.0
-   */
-  public FluoConfiguration setConnectionRetryTimeout(int timeoutMS) {
-    Preconditions.checkArgument(timeoutMS >= -1,
-        CONNECTION_RETRY_TIMEOUT_MS_PROP + " must be >= -1");
-    setProperty(CONNECTION_RETRY_TIMEOUT_MS_PROP, timeoutMS);
+  public FluoConfiguration setClientRetryTimeout(int timeoutMS) {
+    Preconditions.checkArgument(timeoutMS >= -1, CLIENT_RETRY_TIMEOUT_MS_PROP + " must be >= -1");
+    setProperty(CLIENT_RETRY_TIMEOUT_MS_PROP, timeoutMS);
     return this;
   }
 
-  /**
-   * @since 1.2.0
-   */
-  public int getConnectionRetryTimeout() {
-    int retval;
-    if (containsKey(CONNECTION_RETRY_TIMEOUT_MS_PROP)) {
-      retval = getInt(CONNECTION_RETRY_TIMEOUT_MS_PROP, CONNECTION_RETRY_TIMEOUT_MS_DEFAULT);
-    } else {
-      retval = getInt(CLIENT_RETRY_TIMEOUT_MS_PROP, CONNECTION_RETRY_TIMEOUT_MS_DEFAULT);
-    }
-    Preconditions.checkArgument(retval >= -1, CONNECTION_RETRY_TIMEOUT_MS_PROP + " must be >= -1");
+  public int getClientRetryTimeout() {
+    int retval = getInt(CLIENT_RETRY_TIMEOUT_MS_PROP, CLIENT_RETRY_TIMEOUT_MS_DEFAULT);
+    Preconditions.checkArgument(retval >= -1, CLIENT_RETRY_TIMEOUT_MS_PROP + " must be >= -1");
     return retval;
   }
 
   public FluoConfiguration setAccumuloInstance(String accumuloInstance) {
-    return setNonEmptyString(ACCUMULO_INSTANCE_PROP, accumuloInstance);
+    return setNonEmptyString(CLIENT_ACCUMULO_INSTANCE_PROP, accumuloInstance);
   }
 
   public String getAccumuloInstance() {
-    return getDepNonEmptyString(ACCUMULO_INSTANCE_PROP, CLIENT_ACCUMULO_INSTANCE_PROP);
+    return getNonEmptyString(CLIENT_ACCUMULO_INSTANCE_PROP);
   }
 
   public FluoConfiguration setAccumuloUser(String accumuloUser) {
-    return setNonEmptyString(ACCUMULO_USER_PROP, accumuloUser);
+    return setNonEmptyString(CLIENT_ACCUMULO_USER_PROP, accumuloUser);
   }
 
   public String getAccumuloUser() {
-    return getDepNonEmptyString(ACCUMULO_USER_PROP, CLIENT_ACCUMULO_USER_PROP);
+    return getNonEmptyString(CLIENT_ACCUMULO_USER_PROP);
   }
 
   public FluoConfiguration setAccumuloPassword(String accumuloPassword) {
-    setProperty(ACCUMULO_PASSWORD_PROP, verifyNotNull(ACCUMULO_PASSWORD_PROP, accumuloPassword));
+    setProperty(CLIENT_ACCUMULO_PASSWORD_PROP,
+        verifyNotNull(CLIENT_ACCUMULO_PASSWORD_PROP, accumuloPassword));
     return this;
   }
 
   public String getAccumuloPassword() {
-    if (containsKey(ACCUMULO_PASSWORD_PROP)) {
-      return verifyNotNull(ACCUMULO_PASSWORD_PROP, getString(ACCUMULO_PASSWORD_PROP));
-    } else if (containsKey(CLIENT_ACCUMULO_PASSWORD_PROP)) {
-      return verifyNotNull(CLIENT_ACCUMULO_PASSWORD_PROP, getString(CLIENT_ACCUMULO_PASSWORD_PROP));
-    }
-    throw new NoSuchElementException(ACCUMULO_PASSWORD_PROP + " is not set!");
+    return verifyNotNull(CLIENT_ACCUMULO_PASSWORD_PROP, getString(CLIENT_ACCUMULO_PASSWORD_PROP));
   }
 
   public FluoConfiguration setAccumuloZookeepers(String zookeepers) {
-    return setNonEmptyString(ACCUMULO_ZOOKEEPERS_PROP, zookeepers);
+    return setNonEmptyString(CLIENT_ACCUMULO_ZOOKEEPERS_PROP, zookeepers);
   }
 
   public String getAccumuloZookeepers() {
-    return getDepNonEmptyString(ACCUMULO_ZOOKEEPERS_PROP, CLIENT_ACCUMULO_ZOOKEEPERS_PROP,
-        ACCUMULO_ZOOKEEPERS_DEFAULT);
+    return getNonEmptyString(CLIENT_ACCUMULO_ZOOKEEPERS_PROP, CLIENT_ACCUMULO_ZOOKEEPERS_DEFAULT);
   }
 
   /**
@@ -457,56 +270,20 @@ public class FluoConfiguration extends SimpleConfiguration {
    * retrieved from Zookeeper for clients.
    */
   public FluoConfiguration setAccumuloTable(String table) {
-    return setNonEmptyString(ACCUMULO_TABLE_PROP, table);
+    return setNonEmptyString(ADMIN_ACCUMULO_TABLE_PROP, table);
   }
 
   public String getAccumuloTable() {
-    return getDepNonEmptyString(ACCUMULO_TABLE_PROP, ADMIN_ACCUMULO_TABLE_PROP);
+    return getNonEmptyString(ADMIN_ACCUMULO_TABLE_PROP);
   }
 
-  @Deprecated
   public FluoConfiguration setAccumuloClasspath(String path) {
     setProperty(ADMIN_ACCUMULO_CLASSPATH_PROP, verifyNotNull(ADMIN_ACCUMULO_CLASSPATH_PROP, path));
     return this;
   }
 
-  @Deprecated
   public String getAccumuloClasspath() {
     return getString(ADMIN_ACCUMULO_CLASSPATH_PROP, ADMIN_ACCUMULO_CLASSPATH_DEFAULT);
-  }
-
-  /**
-   * Sets paths to jars to provide to Accumulo. If not set, Fluo will find jars on classpath
-   *
-   * @param path CSV list of paths
-   * @since 1.2.0
-   */
-  public FluoConfiguration setAccumuloJars(String path) {
-    setProperty(ACCUMULO_JARS_PROP, verifyNotNull(ACCUMULO_JARS_PROP, path));
-    return this;
-  }
-
-  /**
-   * Gets CSV list of jar paths to provide to Accumulo
-   *
-   * @since 1.2.0
-   */
-  public String getAccumuloJars() {
-    return getString(ACCUMULO_JARS_PROP, ACCUMULO_JARS_DEFAULT);
-  }
-
-  /**
-   * @since 1.2.0
-   */
-  public FluoConfiguration setDfsRoot(String dfsRoot) {
-    return setNonEmptyString(DFS_ROOT_PROP, dfsRoot);
-  }
-
-  /**
-   * @since 1.2.0
-   */
-  public String getDfsRoot() {
-    return getNonEmptyString(DFS_ROOT_PROP, DFS_ROOT_DEFAULT);
   }
 
   public FluoConfiguration setWorkerThreads(int numThreads) {
@@ -530,9 +307,7 @@ public class FluoConfiguration extends SimpleConfiguration {
     while (iter.hasNext()) {
       String key = iter.next();
       if (key.startsWith(FluoConfiguration.OBSERVER_PREFIX)
-          && !key.equals(FluoConfiguration.OBSERVER_PROVIDER)
-          && !key.equals(FluoConfiguration.OBSERVER_INIT_DIR_PROP)
-          && !key.equals(FluoConfiguration.OBSERVER_JARS_URL_PROP)) {
+          && !key.equals(FluoConfiguration.OBSERVER_PROVIDER)) {
         String value = getString(key).trim();
 
         if (value.isEmpty()) {
@@ -557,8 +332,8 @@ public class FluoConfiguration extends SimpleConfiguration {
                 + " has invalid param. Expected 'key=value' but encountered '" + fields[i] + "'");
           }
           if (kv[0].isEmpty() || kv[1].isEmpty()) {
-            throw new IllegalArgumentException(
-                key + " has empty key or value in param: " + fields[i]);
+            throw new IllegalArgumentException(key + " has empty key or value in param: "
+                + fields[i]);
           }
           params.put(kv[0], kv[1]);
         }
@@ -607,45 +382,6 @@ public class FluoConfiguration extends SimpleConfiguration {
    */
   public void setObserverProvider(Class<? extends ObserverProvider> clazz) {
     setObserverProvider(clazz.getName());
-  }
-
-  /**
-   * Sets directory where observers jars can found for initialization
-   *
-   * @param observerDir Path to directory
-   * @since 1.2.0
-   */
-  public FluoConfiguration setObserverInitDir(String observerDir) {
-    setProperty(OBSERVER_INIT_DIR_PROP, verifyNotNull(OBSERVER_INIT_DIR_PROP, observerDir));
-    return this;
-  }
-
-  /**
-   * Gets directory where observer jars can be found for initialization
-   *
-   * @return Path to directory
-   * @since 1.2.0
-   */
-  public String getObserverInitDir() {
-    return getString(OBSERVER_INIT_DIR_PROP, OBSERVER_INIT_DIR_DEFAULT);
-  }
-
-  /**
-   * Sets URL to directory where observer jars can be found
-   *
-   * @param observerJarsUrl URL to observer jars directory
-   * @since 1.2.0
-   */
-  public FluoConfiguration setObserverJarsUrl(String observerJarsUrl) {
-    setProperty(OBSERVER_JARS_URL_PROP, verifyNotNull(OBSERVER_JARS_URL_PROP, observerJarsUrl));
-    return this;
-  }
-
-  /**
-   * @since 1.2.0
-   */
-  public String getObserverJarsUrl() {
-    return getString(OBSERVER_JARS_URL_PROP, OBSERVER_JARS_URL_DEFAULT);
   }
 
   /**
@@ -789,30 +525,20 @@ public class FluoConfiguration extends SimpleConfiguration {
     }
   }
 
-  private boolean verifyStringPropSet(String... keys) {
-    for (String key : keys) {
-      if (containsKey(key) && !getString(key).isEmpty()) {
-        return true;
-      }
+  private boolean verifyStringPropSet(String key) {
+    if (containsKey(key) && !getString(key).isEmpty()) {
+      return true;
     }
-    log.info(keys[0] + " is not set");
+    log.info(key + " is not set");
     return false;
   }
 
-  private boolean verifyStringPropNotSet(String... keys) {
-    for (String key : keys) {
-      if (containsKey(key) && !getString(key).isEmpty()) {
-        log.info(key + " should not be set");
-        return false;
-      }
+  private boolean verifyStringPropNotSet(String key) {
+    if (containsKey(key) && !getString(key).isEmpty()) {
+      log.info(key + " should not be set");
+      return false;
     }
     return true;
-  }
-
-  public boolean hasRequiredConnectionProps() {
-    boolean valid = true;
-    valid &= verifyStringPropSet(CONNECTION_APPLICATION_NAME_PROP, CLIENT_APPLICATION_NAME_PROP);
-    return valid;
   }
 
   /**
@@ -820,10 +546,10 @@ public class FluoConfiguration extends SimpleConfiguration {
    */
   public boolean hasRequiredClientProps() {
     boolean valid = true;
-    valid &= verifyStringPropSet(CONNECTION_APPLICATION_NAME_PROP, CLIENT_APPLICATION_NAME_PROP);
-    valid &= verifyStringPropSet(ACCUMULO_USER_PROP, CLIENT_ACCUMULO_USER_PROP);
-    valid &= verifyStringPropSet(ACCUMULO_PASSWORD_PROP, CLIENT_ACCUMULO_PASSWORD_PROP);
-    valid &= verifyStringPropSet(ACCUMULO_INSTANCE_PROP, CLIENT_ACCUMULO_INSTANCE_PROP);
+    valid &= verifyStringPropSet(CLIENT_APPLICATION_NAME_PROP);
+    valid &= verifyStringPropSet(CLIENT_ACCUMULO_USER_PROP);
+    valid &= verifyStringPropSet(CLIENT_ACCUMULO_PASSWORD_PROP);
+    valid &= verifyStringPropSet(CLIENT_ACCUMULO_INSTANCE_PROP);
     return valid;
   }
 
@@ -833,7 +559,7 @@ public class FluoConfiguration extends SimpleConfiguration {
   public boolean hasRequiredAdminProps() {
     boolean valid = true;
     valid &= hasRequiredClientProps();
-    valid &= verifyStringPropSet(ACCUMULO_TABLE_PROP, ADMIN_ACCUMULO_TABLE_PROP);
+    valid &= verifyStringPropSet(ADMIN_ACCUMULO_TABLE_PROP);
     return valid;
   }
 
@@ -862,11 +588,11 @@ public class FluoConfiguration extends SimpleConfiguration {
     boolean valid = true;
     if (getMiniStartAccumulo()) {
       // ensure that client properties are not set since we are using MiniAccumulo
-      valid &= verifyStringPropNotSet(ACCUMULO_USER_PROP, CLIENT_ACCUMULO_USER_PROP);
-      valid &= verifyStringPropNotSet(ACCUMULO_PASSWORD_PROP, CLIENT_ACCUMULO_PASSWORD_PROP);
-      valid &= verifyStringPropNotSet(ACCUMULO_INSTANCE_PROP, CLIENT_ACCUMULO_INSTANCE_PROP);
-      valid &= verifyStringPropNotSet(ACCUMULO_ZOOKEEPERS_PROP, CLIENT_ACCUMULO_ZOOKEEPERS_PROP);
-      valid &= verifyStringPropNotSet(CONNECTION_ZOOKEEPERS_PROP, CLIENT_ZOOKEEPER_CONNECT_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ACCUMULO_USER_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ACCUMULO_PASSWORD_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ACCUMULO_INSTANCE_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ACCUMULO_ZOOKEEPERS_PROP);
+      valid &= verifyStringPropNotSet(CLIENT_ZOOKEEPER_CONNECT_PROP);
       if (valid == false) {
         log.error("Client properties should not be set in your configuration if MiniFluo is "
             + "configured to start its own accumulo (indicated by fluo.mini.start.accumulo being "
@@ -886,8 +612,7 @@ public class FluoConfiguration extends SimpleConfiguration {
     Iterator<String> iter = getKeys();
     while (iter.hasNext()) {
       String key = iter.next();
-      if (key.startsWith(CONNECTION_PREFIX) || key.startsWith(ACCUMULO_PREFIX)
-          || key.startsWith(CLIENT_PREFIX)) {
+      if (key.startsWith(CLIENT_PREFIX)) {
         clientConfig.setProperty(key, getRawString(key));
       }
     }
@@ -909,10 +634,9 @@ public class FluoConfiguration extends SimpleConfiguration {
    * not have defaults and will not be set.
    */
   public static void setDefaultConfiguration(SimpleConfiguration config) {
-    config.setProperty(CONNECTION_ZOOKEEPERS_PROP, CONNECTION_ZOOKEEPERS_DEFAULT);
-    config.setProperty(CONNECTION_ZOOKEEPER_TIMEOUT_PROP, CONNECTION_ZOOKEEPER_TIMEOUT_DEFAULT);
-    config.setProperty(DFS_ROOT_PROP, DFS_ROOT_DEFAULT);
-    config.setProperty(ACCUMULO_ZOOKEEPERS_PROP, ACCUMULO_ZOOKEEPERS_DEFAULT);
+    config.setProperty(CLIENT_ZOOKEEPER_CONNECT_PROP, CLIENT_ZOOKEEPER_CONNECT_DEFAULT);
+    config.setProperty(CLIENT_ZOOKEEPER_TIMEOUT_PROP, CLIENT_ZOOKEEPER_TIMEOUT_DEFAULT);
+    config.setProperty(CLIENT_ACCUMULO_ZOOKEEPERS_PROP, CLIENT_ACCUMULO_ZOOKEEPERS_DEFAULT);
     config.setProperty(WORKER_NUM_THREADS_PROP, WORKER_NUM_THREADS_DEFAULT);
     config.setProperty(TRANSACTION_ROLLBACK_TIME_PROP, TRANSACTION_ROLLBACK_TIME_DEFAULT);
     config.setProperty(LOADER_NUM_THREADS_PROP, LOADER_NUM_THREADS_DEFAULT);
@@ -943,14 +667,6 @@ public class FluoConfiguration extends SimpleConfiguration {
     int value = getInt(property, defaultValue);
     Preconditions.checkArgument(value > 0, property + " must be positive");
     return value;
-  }
-
-  private int getDepPositiveInt(String property, String depProperty, int defaultValue) {
-    if (containsKey(property)) {
-      return getInt(property, defaultValue);
-    } else {
-      return getInt(depProperty, defaultValue);
-    }
   }
 
   private FluoConfiguration setPositiveLong(String property, long value) {
@@ -986,22 +702,8 @@ public class FluoConfiguration extends SimpleConfiguration {
     return value;
   }
 
-  private String getDepNonEmptyString(String property, String depProperty, String defaultValue) {
-    return containsKey(property) ? getNonEmptyString(property, defaultValue)
-        : getNonEmptyString(depProperty, defaultValue);
-  }
-
-  private String getDepNonEmptyString(String property, String depProperty) {
-    if (containsKey(property)) {
-      return getNonEmptyString(property);
-    } else if (containsKey(depProperty)) {
-      return getNonEmptyString(depProperty);
-    } else {
-      throw new NoSuchElementException(property + " is not set!");
-    }
-  }
-
   private static String verifyNotNull(String property, String value) {
-    return Objects.requireNonNull(value, property + " cannot be null");
+    Objects.requireNonNull(value, property + " cannot be null");
+    return value;
   }
 }

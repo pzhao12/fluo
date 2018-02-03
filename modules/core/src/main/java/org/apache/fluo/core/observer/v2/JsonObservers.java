@@ -33,8 +33,10 @@ class JsonObservers {
 
   JsonObservers(String obsProviderClass, Map<Column, NotificationType> columns) {
     this.obsProviderClass = obsProviderClass;
-    this.observedColumns = columns.entrySet().stream()
-        .map(entry -> new JsonObservedColumn(entry.getKey(), entry.getValue())).collect(toList());
+    this.observedColumns =
+        columns.entrySet().stream()
+            .map(entry -> new JsonObservedColumn(entry.getKey(), entry.getValue()))
+            .collect(toList());
   }
 
   public String getObserverProviderClass() {
@@ -42,8 +44,8 @@ class JsonObservers {
   }
 
   public Map<Column, NotificationType> getObservedColumns() {
-    return observedColumns.stream()
-        .collect(toMap(JsonObservedColumn::getColumn, JsonObservedColumn::getNotificationType));
+    return observedColumns.stream().collect(
+        toMap(JsonObservedColumn::getColumn, JsonObservedColumn::getNotificationType));
   }
 
   @Override

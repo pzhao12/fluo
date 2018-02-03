@@ -48,13 +48,15 @@ public class TransactorCache implements AutoCloseable {
 
   public TransactorCache(Environment env) {
 
-    timeoutCache = CacheBuilder.newBuilder().maximumSize(1 << 15)
-        .expireAfterAccess(TxInfoCache.CACHE_TIMEOUT_MIN, TimeUnit.MINUTES).concurrencyLevel(10)
-        .build();
+    timeoutCache =
+        CacheBuilder.newBuilder().maximumSize(1 << 15)
+            .expireAfterAccess(TxInfoCache.CACHE_TIMEOUT_MIN, TimeUnit.MINUTES)
+            .concurrencyLevel(10).build();
 
     this.env = env;
-    cache = new PathChildrenCache(env.getSharedResources().getCurator(),
-        ZookeeperPath.TRANSACTOR_NODES, true);
+    cache =
+        new PathChildrenCache(env.getSharedResources().getCurator(),
+            ZookeeperPath.TRANSACTOR_NODES, true);
     try {
       cache.start(StartMode.BUILD_INITIAL_CACHE);
       status = TcStatus.OPEN;
@@ -69,8 +71,7 @@ public class TransactorCache implements AutoCloseable {
         lockTs);
   }
 
-  public void addTimedoutTransactor(final Long transactorId, final long lockTs,
-      final Long startTime) {
+  public void addTimedoutTransactor(final Long transactorId, final long lockTs, final Long startTime) {
     try {
       AtomicLong cachedLockTs = timeoutCache.get(transactorId, new Callable<AtomicLong>() {
         @Override

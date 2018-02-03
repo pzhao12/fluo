@@ -231,8 +231,9 @@ public class SnapshotIteratorTest {
       input.add("1 f q1 DATA " + startTime, "" + val2);
     }
 
-    Range[] ranges = new Range[] {new Range(), Range.exact("0", "f", "q1"),
-        Range.exact("1", "f", "q1"), Range.exact("2", "f", "q1")};
+    Range[] ranges =
+        new Range[] {new Range(), Range.exact("0", "f", "q1"), Range.exact("1", "f", "q1"),
+            Range.exact("2", "f", "q1")};
 
 
     for (Range range : ranges) {

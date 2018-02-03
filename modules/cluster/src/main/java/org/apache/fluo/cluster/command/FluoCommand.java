@@ -27,13 +27,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of Fluo command
  */
-@Deprecated
 public class FluoCommand {
 
   public static void verifyNoArgs(String[] remainArgs) {
     if (remainArgs.length != 0) {
-      System.err.println(
-          "ERROR - Received unexpected command-line arguments: " + Arrays.toString(remainArgs));
+      System.err.println("ERROR - Received unexpected command-line arguments: "
+          + Arrays.toString(remainArgs));
       System.exit(-1);
     }
   }
@@ -72,8 +71,9 @@ public class FluoCommand {
           break;
         case "start":
           verifyNoArgs(remainArgs);
-          runner.start(fluoInstall.getAppConfiguration(appName), fluoInstall.getAppConfDir(appName),
-              fluoInstall.getAppLibDir(appName), fluoInstall.getLibDir());
+          runner.start(fluoInstall.getAppConfiguration(appName),
+              fluoInstall.getAppConfDir(appName), fluoInstall.getAppLibDir(appName),
+              fluoInstall.getLibDir());
           break;
         case "scan":
           runner.scan(fluoInstall.resolveFluoConfiguration(appName), remainArgs);

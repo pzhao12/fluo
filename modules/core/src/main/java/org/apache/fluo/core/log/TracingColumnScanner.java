@@ -42,11 +42,13 @@ public class TracingColumnScanner implements ColumnScanner {
 
   @Override
   public Iterator<ColumnValue> iterator() {
-    return Iterators.transform(cs.iterator(), cv -> {
-      log.trace("txid: {} scanId: {} next()-> {} {} {}", txid, scanId, encRow,
-          Hex.encNonAscii(cv.getColumn()), Hex.encNonAscii(cv.getValue()));
-      return cv;
-    });
+    return Iterators.transform(
+        cs.iterator(),
+        cv -> {
+          log.trace("txid: {} scanId: {} next()-> {} {} {}", txid, scanId, encRow,
+              Hex.encNonAscii(cv.getColumn()), Hex.encNonAscii(cv.getValue()));
+          return cv;
+        });
   }
 
   @Override

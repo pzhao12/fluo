@@ -48,7 +48,8 @@ public class VisibilityCache {
 
   VisibilityCache() {
     visCache =
-        CacheBuilder.newBuilder().expireAfterAccess(TxInfoCache.CACHE_TIMEOUT_MIN, TimeUnit.MINUTES)
+        CacheBuilder.newBuilder()
+            .expireAfterAccess(TxInfoCache.CACHE_TIMEOUT_MIN, TimeUnit.MINUTES)
             .maximumWeight(10000000).weigher(new VisWeigher()).concurrencyLevel(10).build();
   }
 

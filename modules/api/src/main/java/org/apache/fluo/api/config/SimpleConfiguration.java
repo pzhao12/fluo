@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -61,6 +60,18 @@ public class SimpleConfiguration implements Serializable {
     internalConfig = compositeConfig;
   }
 
+  private void load(InputStream in) {
+    try {
+      PropertiesConfiguration config = new PropertiesConfiguration();
+      // disabled to prevent accumulo classpath value from being shortened
+      config.setDelimiterParsingDisabled(true);
+      config.load(in);
+      ((CompositeConfiguration) internalConfig).addConfiguration(config);
+    } catch (ConfigurationException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
   public SimpleConfiguration() {
     init();
   }
@@ -74,7 +85,15 @@ public class SimpleConfiguration implements Serializable {
    */
   public SimpleConfiguration(File propertiesFile) {
     this();
-    load(propertiesFile);
+    try {
+      PropertiesConfiguration config = new PropertiesConfiguration();
+      // disabled to prevent accumulo classpath value from being shortened
+      config.setDelimiterParsingDisabled(true);
+      config.load(propertiesFile);
+      ((CompositeConfiguration) internalConfig).addConfiguration(config);
+    } catch (ConfigurationException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   /**
@@ -167,42 +186,6 @@ public class SimpleConfiguration implements Serializable {
     return internalConfig.getString(key, defaultValue);
   }
 
-  /**
-   * Loads configuration from InputStream. Later loads have lower priority.
-   * 
-   * @param in InputStream to load from
-   * @since 1.2.0
-   */
-  public void load(InputStream in) {
-    try {
-      PropertiesConfiguration config = new PropertiesConfiguration();
-      // disabled to prevent accumulo classpath value from being shortened
-      config.setDelimiterParsingDisabled(true);
-      config.load(in);
-      ((CompositeConfiguration) internalConfig).addConfiguration(config);
-    } catch (ConfigurationException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
-
-  /**
-   * Loads configuration from File. Later loads have lower priority.
-   * 
-   * @param file File to load from
-   * @since 1.2.0
-   */
-  public void load(File file) {
-    try {
-      PropertiesConfiguration config = new PropertiesConfiguration();
-      // disabled to prevent accumulo classpath value from being shortened
-      config.setDelimiterParsingDisabled(true);
-      config.load(file);
-      ((CompositeConfiguration) internalConfig).addConfiguration(config);
-    } catch (ConfigurationException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
-
   public void save(File file) {
     PropertiesConfiguration pconf = new PropertiesConfiguration();
     pconf.setDelimiterParsingDisabled(true);
@@ -213,6 +196,7 @@ public class SimpleConfiguration implements Serializable {
       throw new FluoException(e);
     }
   }
+
 
   public void save(OutputStream out) {
     PropertiesConfiguration pconf = new PropertiesConfiguration();
@@ -248,44 +232,6 @@ public class SimpleConfiguration implements Serializable {
    */
   public SimpleConfiguration subset(String prefix) {
     return new SimpleConfiguration(internalConfig.subset(prefix));
-  }
-
-  /**
-   * @param fallback SimpleConfiguration to join together
-   * @return a new simple configuration that contains all of the current properties from this plus
-   *         the properties from fallback that are not present in this.
-   * 
-   * @since 1.2.0
-   */
-  public SimpleConfiguration orElse(SimpleConfiguration fallback) {
-    SimpleConfiguration copy = new SimpleConfiguration(this);
-    for (Map.Entry<String, String> entry : fallback.toMap().entrySet()) {
-      if (!copy.containsKey(entry.getKey())) {
-        copy.setProperty(entry.getKey(), entry.getValue());
-      }
-    }
-    return copy;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(this.toMap().entrySet());
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (o == this) {
-      return true;
-    }
-
-    if (o instanceof SimpleConfiguration) {
-      Map<String, String> th = this.toMap();
-      Map<String, String> sc = ((SimpleConfiguration) o).toMap();
-      if (th.size() == sc.size()) {
-        return th.entrySet().equals(sc.entrySet());
-      }
-    }
-    return false;
   }
 
   @Override
